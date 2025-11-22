@@ -5,107 +5,92 @@ import { useState } from 'react';
 export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-  const navItems = [
-    { path: '/leads', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/inventory', label: 'Inventory', icon: Home },
-  ];
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      
-      {/* --- DESKTOP SIDEBAR (Hidden on Mobile) --- */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
-        <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <h1 className="text-xl font-bold text-indigo-700 flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">S</div>
-            Sameera
-          </h1>
+    <>
+      {/* Desktop Sidebar - Fixed Left */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-6">
+          <div className="flex h-16 shrink-0 items-center border-b border-gray-100">
+            <h1 className="text-xl font-bold text-indigo-700">Sameera</h1>
+          </div>
+          <nav className="flex flex-1 flex-col">
+            <ul className="flex flex-1 flex-col gap-y-1">
+              <li>
+                <Link to="/leads" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/leads' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                  <LayoutDashboard className="h-5 w-5" />
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link to="/inventory" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/inventory' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                  <Home className="h-5 w-5" />
+                  Inventory
+                </Link>
+              </li>
+            </ul>
+            <div className="border-t border-gray-100 pt-4 pb-4">
+              <button onClick={() => { localStorage.removeItem('token'); navigate('/login'); }} className="group flex w-full gap-x-3 rounded-md p-3 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600">
+                <LogOut className="h-5 w-5" />
+                Sign Out
+              </button>
+            </div>
+          </nav>
         </div>
-        
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-medium text-sm ${
-                  isActive 
-                    ? 'bg-indigo-50 text-indigo-700' 
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="p-4 border-t border-gray-100">
-          <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-500 hover:text-red-600 rounded-lg transition-colors">
-            <LogOut size={16} /> Sign Out
-          </button>
-        </div>
-      </aside>
-
-      {/* --- MOBILE HEADER (Visible ONLY on Mobile) --- */}
-      <div className="md:hidden fixed top-0 left-0 w-full bg-white z-30 border-b border-gray-200 h-16 flex items-center justify-between px-4 shadow-sm">
-        <h1 className="text-lg font-bold text-indigo-700">Sameera</h1>
-        <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600">
-          <Menu size={24} />
-        </button>
       </div>
 
-      {/* --- MOBILE SIDEBAR OVERLAY --- */}
-      {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+      {/* Mobile Top Bar */}
+      <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm lg:hidden">
+        <button type="button" onClick={() => setMobileMenuOpen(true)} className="-m-2.5 p-2.5 text-gray-700">
+          <Menu className="h-6 w-6" />
+        </button>
+        <div className="flex-1 text-sm font-semibold text-gray-900">Sameera</div>
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div className="relative z-50 lg:hidden">
+          <div className="fixed inset-0 bg-gray-900/80" onClick={() => setMobileMenuOpen(false)}></div>
+          <div className="fixed inset-0 flex">
+            <div className="relative mr-16 flex w-full max-w-xs flex-1">
+              <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
+                <button type="button" onClick={() => setMobileMenuOpen(false)} className="-m-2.5 p-2.5">
+                  <X className="h-6 w-6 text-white" />
+                </button>
+              </div>
+              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pb-2">
+                <div className="flex h-16 shrink-0 items-center">
+                  <h1 className="text-xl font-bold text-indigo-700">Sameera</h1>
+                </div>
+                <nav className="flex flex-1 flex-col">
+                  <ul className="flex flex-1 flex-col gap-y-1">
+                    <li>
+                      <Link onClick={() => setMobileMenuOpen(false)} to="/leads" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/leads' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}>
+                        <LayoutDashboard className="h-5 w-5" />
+                        Dashboard
+                      </Link>
+                    </li>
+                    <li>
+                      <Link onClick={() => setMobileMenuOpen(false)} to="/inventory" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/inventory' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}>
+                        <Home className="h-5 w-5" />
+                        Inventory
+                      </Link>
+                    </li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* --- MOBILE MENU DRAWER --- */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 md:hidden ${
-        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}>
-        <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
-          <h1 className="text-xl font-bold text-indigo-700">Sameera</h1>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500">
-            <X size={24} />
-          </button>
-        </div>
-        <nav className="p-4 space-y-2">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              onClick={() => setIsSidebarOpen(false)}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium ${
-                location.pathname === item.path 
-                  ? 'bg-indigo-50 text-indigo-700' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              <item.icon size={20} />
-              {item.label}
-            </Link>
-          ))}
-          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 hover:text-red-600 mt-4">
-            <LogOut size={20} /> Sign Out
-          </button>
-        </nav>
+      {/* Main Content */}
+      <div className="lg:pl-64">
+        <main className="py-6 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+          {children}
+        </main>
       </div>
-
-      {/* --- MAIN CONTENT WRAPPER --- */}
-      {/* This margin-left (md:ml-64) pushes content right on desktop so it doesn't hide behind sidebar */}
-      <main className="flex-1 md:ml-64 p-6 mt-16 md:mt-0 w-full transition-all">
-        {children}
-      </main>
-    </div>
+    </>
   );
 }
