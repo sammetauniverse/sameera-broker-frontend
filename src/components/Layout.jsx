@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Home, LogOut, Menu, UserCircle } from 'lucide-react';
+import { LayoutDashboard, Home, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout({ children }) {
@@ -18,79 +18,66 @@ export default function Layout({ children }) {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans text-gray-900">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20 shadow-sm">
-        {/* Logo Area */}
+    <div className="min-h-screen bg-gray-50 flex">
+      
+      {/* --- DESKTOP SIDEBAR (Hidden on Mobile) --- */}
+      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full z-20">
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
-          <h1 className="text-xl font-bold text-indigo-700 tracking-tight flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-lg">S</div>
+          <h1 className="text-xl font-bold text-indigo-700 flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white">S</div>
             Sameera
           </h1>
         </div>
         
-        {/* Navigation Links */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 font-medium text-sm ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all font-medium text-sm ${
                   isActive 
                     ? 'bg-indigo-50 text-indigo-700' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
-                <item.icon size={18} className={isActive ? 'text-indigo-600' : 'text-gray-400'} />
+                <item.icon size={18} />
                 {item.label}
               </Link>
             );
           })}
         </nav>
 
-        {/* User Profile Snippet */}
         <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors mb-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
-              SB
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-gray-900 truncate">Sameera Bangalore</p>
-              <p className="text-xs text-gray-500 truncate">Broker</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut size={16} />
-            Sign Out
+          <button onClick={handleLogout} className="flex items-center gap-2 px-4 py-2 w-full text-left text-sm text-gray-500 hover:text-red-600 rounded-lg transition-colors">
+            <LogOut size={16} /> Sign Out
           </button>
         </div>
       </aside>
 
-      {/* Mobile Header */}
+      {/* --- MOBILE HEADER (Visible ONLY on Mobile) --- */}
       <div className="md:hidden fixed top-0 left-0 w-full bg-white z-30 border-b border-gray-200 h-16 flex items-center justify-between px-4 shadow-sm">
         <h1 className="text-lg font-bold text-indigo-700">Sameera</h1>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-md hover:bg-gray-100 text-gray-600">
+        <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-gray-600">
           <Menu size={24} />
         </button>
       </div>
 
-      {/* Mobile Sidebar Overlay */}
+      {/* --- MOBILE SIDEBAR OVERLAY --- */}
       {isSidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
       )}
 
-      {/* Mobile Sidebar Menu */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 md:hidden shadow-2xl ${
+      {/* --- MOBILE MENU DRAWER --- */}
+      <div className={`fixed top-0 left-0 h-full w-64 bg-white z-50 transform transition-transform duration-300 md:hidden ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-100">
           <h1 className="text-xl font-bold text-indigo-700">Sameera</h1>
-          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-400 hover:text-gray-600"><Menu size={24} /></button>
+          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500">
+            <X size={24} />
+          </button>
         </div>
         <nav className="p-4 space-y-2">
           {navItems.map((item) => (
@@ -108,18 +95,15 @@ export default function Layout({ children }) {
               {item.label}
             </Link>
           ))}
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg mt-4"
-          >
-            <LogOut size={20} />
-            Sign Out
+          <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 w-full text-left text-gray-600 hover:text-red-600 mt-4">
+            <LogOut size={20} /> Sign Out
           </button>
         </nav>
       </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 md:ml-64 p-4 md:p-8 mt-16 md:mt-0 max-w-7xl w-full mx-auto">
+      {/* --- MAIN CONTENT WRAPPER --- */}
+      {/* This margin-left (md:ml-64) pushes content right on desktop so it doesn't hide behind sidebar */}
+      <main className="flex-1 md:ml-64 p-6 mt-16 md:mt-0 w-full transition-all">
         {children}
       </main>
     </div>
