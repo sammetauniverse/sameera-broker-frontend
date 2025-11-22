@@ -3,20 +3,35 @@ import Login from './pages/Login';
 import Leads from './pages/Leads';
 import Inventory from './pages/Inventory';
 
-function App() {
-  const isAuthenticated = !!localStorage.getItem('token');
+// Simple protection component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
+function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
         <Route 
           path="/leads" 
-          element={isAuthenticated ? <Leads /> : <Navigate to="/" />} 
+          element={
+            <ProtectedRoute>
+              <Leads />
+            </ProtectedRoute>
+          } 
         />
         <Route 
           path="/inventory" 
-          element={isAuthenticated ? <Inventory /> : <Navigate to="/" />} 
+          element={
+            <ProtectedRoute>
+              <Inventory />
+            </ProtectedRoute>
+          } 
         />
       </Routes>
     </BrowserRouter>
