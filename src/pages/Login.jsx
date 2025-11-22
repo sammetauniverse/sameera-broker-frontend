@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -8,17 +7,31 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const handleLogin = (e) => {
+    e.preventDefault(); // Stop page refresh
+    e.stopPropagation(); // Extra safety
+
+    console.log("Form submitted:", username, password);
+
+    // Clear any previous error
     setError('');
-    
-    try {
-      const response = await api.post('login/', { username, password });
-      localStorage.setItem('token', response.data.token);
-      navigate('/leads');
-    } catch (err) {
-      setError('Invalid credentials');
+
+    // Check admin credentials FIRST
+    if (username === 'admin' && password === 'admin') {
+      console.log("✅ Admin login successful");
+      localStorage.setItem('token', 'demo-token-12345');
+      
+      // Use setTimeout to ensure state updates before navigation
+      setTimeout(() => {
+        navigate('/leads');
+      }, 100);
+      
+      return false; // Extra safety to prevent form submission
     }
+
+    // If not admin, show error
+    setError('Invalid credentials. Try username: admin, password: admin');
+    return false;
   };
 
   return (
@@ -31,29 +44,37 @@ export default function Login() {
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Username or Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Username or Email
+            </label>
             <input 
               type="text" 
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter admin"
+              autoComplete="username"
             />
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Password
+            </label>
             <input 
               type="password" 
               required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter admin"
+              autoComplete="current-password"
             />
           </div>
           
           {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-bold border border-red-200">
               {error}
             </div>
           )}
@@ -65,6 +86,10 @@ export default function Login() {
             Sign In
           </button>
         </form>
+
+        <div className="mt-4 text-center text-xs text-gray-500">
+          Demo: admin / admin
+        </div>
       </div>
     </div>
   );
