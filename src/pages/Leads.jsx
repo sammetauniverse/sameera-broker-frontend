@@ -1,150 +1,125 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddLeadModal from '../components/AddLeadModal';
-import { Filter, MapPin, Calendar, FileText, CheckCircle, Edit2 } from 'lucide-react';
+import { Filter, MapPin, Calendar, IndianRupee, Plus } from 'lucide-react';
 
 export default function Leads() {
-  const [leads, setLeads] = useState([
-    { 
-      id: "SB-12345", 
-      date: "2024-07-20", 
-      lat: "12.9716", 
-      lng: "77.5946", 
-      price: "25000000", 
-      acres: "5.2", 
-      status: "Visit Scheduled", 
-      visitDone: true 
-    },
-    { 
-      id: "SB-12344", 
-      date: "2024-07-18", 
-      lat: "12.9345", 
-      lng: "77.6244", 
-      price: "50000000", 
-      acres: "10", 
-      status: "Contacted", 
-      visitDone: false 
-    }
-  ]);
-  
+  // Load leads from LocalStorage or use default
+  const [leads, setLeads] = useState(() => {
+    const saved = localStorage.getItem('myLeads');
+    return saved ? JSON.parse(saved) : [
+      { id: 171623, name: "Rahul Kumar", location: "Bangalore", price: "25000000", status: "New", date: "2025-11-20", siteVisit: false },
+      { id: 171624, name: "Priya Sharma", location: "Chennai", price: "5000000", status: "Contacted", date: "2025-11-18", siteVisit: true },
+    ];
+  });
+
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    location: '',
+    minPrice: '',
+    maxPrice: '',
+    status: 'All'
+  });
+
+  // Save to LocalStorage whenever leads change
+  useEffect(() => {
+    localStorage.setItem('myLeads', JSON.stringify(leads));
+  }, [leads]);
 
   const handleSaveLead = (newLead) => {
-    setLeads([{ ...newLead, id: `SB-${Math.floor(10000 + Math.random() * 90000)}` }, ...leads]);
+    const leadWithId = { ...newLead, id: Math.floor(100000 + Math.random() * 900000) };
+    setLeads([leadWithId, ...leads]);
   };
 
+  // Filter Logic
+  const filteredLeads = leads.filter(lead => {
+    const matchLoc = lead.location.toLowerCase().includes(filters.location.toLowerCase());
+    const matchStatus = filters.status === 'All' || lead.status === filters.status;
+    const matchMinPrice = !filters.minPrice || Number(lead.price) >= Number(filters.minPrice);
+    const matchMaxPrice = !filters.maxPrice || Number(lead.price) <= Number(filters.maxPrice);
+    return matchLoc && matchStatus && matchMinPrice && matchMaxPrice;
+  });
+
   const getStatusBadge = (status) => {
-    const styles = {
-      'New': 'bg-blue-50 text-blue-700',
-      'Contacted': 'bg-yellow-50 text-yellow-700',
-      'Visit Scheduled': 'bg-purple-50 text-purple-700',
-      'Closed': 'bg-green-50 text-green-700'
-    };
-    return (
-      <span className={`px-3 py-1 rounded-full text-xs font-bold ${styles[status] || 'bg-gray-100'}`}>
-        {status}
-      </span>
-    );
+    const colors = { 'New': 'bg-blue-100 text-blue-700', 'Contacted': 'bg-yellow-100 text-yellow-700', 'Closed': 'bg-green-100 text-green-700' };
+    return <span className={`px-2 py-1 rounded-full text-xs font-bold ${colors[status] || 'bg-gray-100'}`}>{status}</span>;
   };
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Leads Dashboard</h1>
-
-        {/* Filters Card */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-6 text-gray-800 font-bold">
-            <Filter size={18} /> Filters
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Date From</label>
-              <input type="date" className="w-full p-2 border border-gray-200 rounded text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Date To</label>
-              <input type="date" className="w-full p-2 border border-gray-200 rounded text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Min Price</label>
-              <input type="number" placeholder="e.g. 1000000" className="w-full p-2 border border-gray-200 rounded text-sm" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Max Price</label>
-              <input type="number" placeholder="e.g. 5000000" className="w-full p-2 border border-gray-200 rounded text-sm" />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-2">Status</label>
-              <div className="flex gap-4 text-sm text-gray-600">
-                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> New</label>
-                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Contacted</label>
-                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Visit Scheduled</label>
-                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Closed</label>
-              </div>
-            </div>
-            <div className="flex justify-end">
-              <button className="bg-gray-800 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-900">
-                Reset Filters
-              </button>
-            </div>
-          </div>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Leads Dashboard</h1>
+          <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700">
+            <Plus size={18} /> Add Lead
+          </button>
         </div>
 
-        {/* Lead Cards List */}
-        <div className="space-y-4">
-          {leads.map((lead) => (
-            <div key={lead.id} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <span className="text-xs text-gray-500 font-medium">Lead ID</span>
-                  <h3 className="text-lg font-bold text-gray-900">{lead.id}</h3>
-                </div>
-                <div className="flex items-center gap-3">
-                  {getStatusBadge(lead.status)}
-                  <button className="text-gray-400 hover:text-indigo-600"><Edit2 size={16} /></button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4 border-t border-b border-gray-50 mb-4 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Calendar size={16} className="text-indigo-500" />
-                  {lead.date}
-                </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin size={16} className="text-indigo-500" />
-                  {lead.lat}, {lead.lng}
-                </div>
-                <div className="text-gray-900 font-medium">
-                  ₹ {Number(lead.price).toLocaleString()}
-                </div>
-                <div className="text-gray-900 font-medium">
-                  Acres: {lead.acres}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-sm font-bold text-gray-700">Site Visit:</span>
-                {lead.visitDone ? <CheckCircle size={18} className="text-green-500" /> : <span className="text-xs text-gray-400">Not done</span>}
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg w-48 border border-gray-100 flex flex-col items-center text-center">
-                <FileText size={24} className="text-gray-400 mb-2" />
-                <span className="text-xs text-gray-500 truncate w-full">property_plan.pdf</span>
-              </div>
-            </div>
-          ))}
+        {/* Simplified Filters */}
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="col-span-1 md:col-span-4 flex items-center gap-2 font-bold text-gray-700 text-sm border-b pb-2 mb-2">
+            <Filter size={16} /> Filter Leads
+          </div>
+          <input 
+            placeholder="Location (e.g. Bangalore)" 
+            className="p-2 border rounded text-sm"
+            value={filters.location}
+            onChange={e => setFilters({...filters, location: e.target.value})}
+          />
+          <select 
+            className="p-2 border rounded text-sm"
+            value={filters.status}
+            onChange={e => setFilters({...filters, status: e.target.value})}
+          >
+            <option value="All">All Status</option>
+            <option>New</option><option>Contacted</option><option>Closed</option>
+          </select>
+          <input 
+            type="number" placeholder="Min Price" 
+            className="p-2 border rounded text-sm"
+            value={filters.minPrice}
+            onChange={e => setFilters({...filters, minPrice: e.target.value})}
+          />
+          <input 
+            type="number" placeholder="Max Price" 
+            className="p-2 border rounded text-sm"
+            value={filters.maxPrice}
+            onChange={e => setFilters({...filters, maxPrice: e.target.value})}
+          />
         </div>
 
-        <AddLeadModal 
-          isOpen={isModalOpen} 
-          onClose={() => setIsModalOpen(false)} 
-          onSave={handleSaveLead} 
-        />
+        {/* Clean Table Design */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-bold">
+              <tr>
+                <th className="p-4">Client Name</th>
+                <th className="p-4">Location</th>
+                <th className="p-4">Price</th>
+                <th className="p-4">Date</th>
+                <th className="p-4">Site Visit</th>
+                <th className="p-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredLeads.map(lead => (
+                <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="p-4 font-medium text-gray-900">{lead.name}</td>
+                  <td className="p-4 text-gray-600 flex items-center gap-1"><MapPin size={14}/> {lead.location}</td>
+                  <td className="p-4 font-medium"><IndianRupee size={14} className="inline"/> {Number(lead.price).toLocaleString()}</td>
+                  <td className="p-4 text-gray-500 text-sm flex items-center gap-1"><Calendar size={14}/> {lead.date}</td>
+                  <td className="p-4">
+                    {lead.siteVisit ? <span className="text-green-600 font-bold text-xs">✔ Scheduled</span> : <span className="text-gray-400 text-xs">Not scheduled</span>}
+                  </td>
+                  <td className="p-4">{getStatusBadge(lead.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filteredLeads.length === 0 && <div className="p-8 text-center text-gray-500">No leads match your filters.</div>}
+        </div>
+
+        <AddLeadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveLead} />
       </div>
     </Layout>
   );

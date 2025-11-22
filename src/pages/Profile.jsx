@@ -1,14 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Camera } from 'lucide-react';
+import { Camera, Save, Loader } from 'lucide-react';
 
 export default function Profile() {
-  const [avatar, setAvatar] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState({
+    name: 'Sameera Bangalore',
+    phone: '+91 98765 43210',
+    avatar: null
+  });
+
+  // Load saved profile on startup
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('userProfile');
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
+    setIsLoading(false);
+  }, []);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    if (file) setAvatar(URL.createObjectURL(file));
+    if (file) {
+      // Convert image to Base64 string to save in LocalStorage
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfile(prev => ({ ...prev, avatar: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
+
+  const handleSave = () => {
+    localStorage.setItem('userProfile', JSON.stringify(profile));
+    alert("Profile updated successfully!");
+  };
+
+  if (isLoading) return <div className="p-10 text-center">Loading...</div>;
 
   return (
     <Layout>
@@ -16,15 +44,14 @@ export default function Profile() {
         <h1 className="text-2xl font-bold text-gray-800 mb-6">My Profile</h1>
         
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
-          {/* Avatar Section */}
           <div className="flex justify-center mb-8">
             <div className="relative group">
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
-                {avatar ? (
-                  <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                {profile.avatar ? (
+                  <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
-                    <svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                  <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300 font-bold text-4xl">
+                    {profile.name.charAt(0)}
                   </div>
                 )}
               </div>
@@ -35,14 +62,14 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Form Fields */}
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
               <input 
                 type="text" 
-                defaultValue="Sameera Bangalore" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                value={profile.name}
+                onChange={(e) => setProfile({...profile, name: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50"
               />
             </div>
 
@@ -50,14 +77,18 @@ export default function Profile() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
               <input 
                 type="text" 
-                defaultValue="+91 98765 43210" 
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+                value={profile.phone}
+                onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50"
               />
             </div>
 
             <div className="flex justify-end pt-4">
-              <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm">
-                Save Changes
+              <button 
+                onClick={handleSave}
+                className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm flex items-center gap-2"
+              >
+                <Save size={18} /> Save Changes
               </button>
             </div>
           </div>
