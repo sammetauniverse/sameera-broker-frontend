@@ -2,8 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Leads from './pages/Leads';
 import Inventory from './pages/Inventory';
+import Profile from './pages/Profile'; // Import Profile
 
-// Simple protection component
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -30,6 +30,15 @@ function App() {
           element={
             <ProtectedRoute>
               <Inventory />
+            </ProtectedRoute>
+          } 
+        />
+        {/* Add Profile Route */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           } 
         />
