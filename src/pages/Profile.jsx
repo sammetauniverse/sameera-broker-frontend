@@ -1,116 +1,64 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
-import { User, Mail, Phone, Building, Upload, Camera } from 'lucide-react';
+import { Camera } from 'lucide-react';
 
 export default function Profile() {
   const [avatar, setAvatar] = useState(null);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setAvatar(imageUrl);
-    }
+    if (file) setAvatar(URL.createObjectURL(file));
   };
 
   return (
     <Layout>
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">My Profile</h1>
+      <div className="max-w-2xl mx-auto mt-10">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">My Profile</h1>
         
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          {/* Cover Photo */}
-          <div className="h-32 bg-gradient-to-r from-indigo-600 to-purple-600 relative group cursor-pointer">
-            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white text-xs font-medium bg-black/30 px-2 py-1 rounded-full flex items-center gap-1">
-                <Camera size={12} /> Edit Cover
-              </span>
+        <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
+          {/* Avatar Section */}
+          <div className="flex justify-center mb-8">
+            <div className="relative group">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
+                {avatar ? (
+                  <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300">
+                    <svg className="w-20 h-20" fill="currentColor" viewBox="0 0 24 24"><path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                  </div>
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 bg-indigo-600 p-2 rounded-full text-white cursor-pointer hover:bg-indigo-700 transition-colors shadow-md">
+                <Camera size={18} />
+                <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+              </label>
             </div>
           </div>
 
-          <div className="px-8 pb-8">
-            {/* Profile Picture Upload Section */}
-            <div className="relative -top-12 mb-4 w-24 h-24 group">
-              <div className="w-full h-full bg-white rounded-full p-1 shadow-lg relative overflow-hidden">
-                {avatar ? (
-                  <img 
-                    src={avatar} 
-                    alt="Profile" 
-                    className="w-full h-full rounded-full object-cover" 
-                  />
-                ) : (
-                  <div className="w-full h-full bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 text-3xl font-bold border-2 border-indigo-100">
-                    A
-                  </div>
-                )}
-                
-                {/* Hover Upload Overlay */}
-                <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-full z-10">
-                  <Upload size={20} className="mb-1" />
-                  <span className="text-[10px] font-medium">Upload</span>
-                  <input 
-                    type="file" 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleAvatarChange} 
-                  />
-                </label>
-              </div>
+          {/* Form Fields */}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <input 
+                type="text" 
+                defaultValue="Sameera Bangalore" 
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+              />
             </div>
-            
-            {/* User Details */}
-            <div className="space-y-8">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Administrator</h2>
-                  <p className="text-indigo-600 font-medium">Senior Broker</p>
-                </div>
-                <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                  Edit Profile
-                </button>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
-                      <User size={18} />
-                    </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Username</span>
-                  </div>
-                  <p className="text-gray-900 font-medium pl-11">admin</p>
-                </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+              <input 
+                type="text" 
+                defaultValue="+91 98765 43210" 
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-gray-50"
+              />
+            </div>
 
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
-                      <Mail size={18} />
-                    </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Email</span>
-                  </div>
-                  <p className="text-gray-900 font-medium pl-11">admin@sameera.com</p>
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
-                      <Phone size={18} />
-                    </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Phone</span>
-                  </div>
-                  <p className="text-gray-900 font-medium pl-11">+91 98765 43210</p>
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-indigo-200 transition-colors group">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-white rounded-lg shadow-sm group-hover:text-indigo-600 transition-colors">
-                      <Building size={18} />
-                    </div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Region</span>
-                  </div>
-                  <p className="text-gray-900 font-medium pl-11">Chennai & Bangalore</p>
-                </div>
-              </div>
+            <div className="flex justify-end pt-4">
+              <button className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm">
+                Save Changes
+              </button>
             </div>
           </div>
         </div>

@@ -1,120 +1,150 @@
 import { useState } from 'react';
 import Layout from '../components/Layout';
 import AddLeadModal from '../components/AddLeadModal';
-import { Plus, Phone, MapPin, Search, Filter, X, FileText, MessageSquare, Upload } from 'lucide-react';
+import { Filter, MapPin, Calendar, FileText, CheckCircle, Edit2 } from 'lucide-react';
 
 export default function Leads() {
-  // --- STATE ---
   const [leads, setLeads] = useState([
-    { id: 1, name: "Rahul Kumar", phone: "9876543210", location: "Bangalore", status: "new", email: "rahul@example.com", comments: ["Called yesterday, interested in 2BHK"], docs: [] },
-    { id: 2, name: "Priya Sharma", phone: "9988776655", location: "Chennai", status: "contacted", email: "priya@test.com", comments: [], docs: [] },
+    { 
+      id: "SB-12345", 
+      date: "2024-07-20", 
+      lat: "12.9716", 
+      lng: "77.5946", 
+      price: "25000000", 
+      acres: "5.2", 
+      status: "Visit Scheduled", 
+      visitDone: true 
+    },
+    { 
+      id: "SB-12344", 
+      date: "2024-07-18", 
+      lat: "12.9345", 
+      lng: "77.6244", 
+      price: "50000000", 
+      acres: "10", 
+      status: "Contacted", 
+      visitDone: false 
+    }
   ]);
   
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null); // For Details Modal
-  const [newComment, setNewComment] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleSaveLead = (newLead) => setLeads([{...newLead, comments: [], docs: []}, ...leads]);
-
-  const addComment = () => {
-    if (!newComment.trim()) return;
-    const updatedLead = { ...selectedLead, comments: [...selectedLead.comments, newComment] };
-    updateLeadInList(updatedLead);
-    setNewComment("");
+  const handleSaveLead = (newLead) => {
+    setLeads([{ ...newLead, id: `SB-${Math.floor(10000 + Math.random() * 90000)}` }, ...leads]);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const updatedLead = { ...selectedLead, docs: [...selectedLead.docs, file.name] };
-      updateLeadInList(updatedLead);
-    }
-  };
-
-  const updateLeadInList = (updatedLead) => {
-    setSelectedLead(updatedLead);
-    setLeads(leads.map(l => l.id === updatedLead.id ? updatedLead : l));
+  const getStatusBadge = (status) => {
+    const styles = {
+      'New': 'bg-blue-50 text-blue-700',
+      'Contacted': 'bg-yellow-50 text-yellow-700',
+      'Visit Scheduled': 'bg-purple-50 text-purple-700',
+      'Closed': 'bg-green-50 text-green-700'
+    };
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-bold ${styles[status] || 'bg-gray-100'}`}>
+        {status}
+      </span>
+    );
   };
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Leads Dashboard</h1>
-          <button onClick={() => setIsAddModalOpen(true)} className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-medium flex gap-2 items-center">
-            <Plus size={18} /> Add Lead
-          </button>
-        </div>
+      <div className="max-w-6xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Leads Dashboard</h1>
 
-        {/* LEADS TABLE */}
-        <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b">
-              <tr><th className="p-4">Name</th><th className="p-4">Status</th><th className="p-4">Contact</th><th className="p-4">Action</th></tr>
-            </thead>
-            <tbody className="divide-y">
-              {leads.map(lead => (
-                <tr key={lead.id} className="hover:bg-gray-50">
-                  <td className="p-4 font-medium text-gray-900">{lead.name}</td>
-                  <td className="p-4"><span className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs font-bold uppercase">{lead.status}</span></td>
-                  <td className="p-4 text-sm text-gray-500">{lead.phone}</td>
-                  <td className="p-4">
-                    <button onClick={() => setSelectedLead(lead)} className="text-indigo-600 hover:text-indigo-800 font-medium text-sm">View Details</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* LEAD DETAILS MODAL (Comments & Docs) */}
-        {selectedLead && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-            <div className="bg-white rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl overflow-hidden">
-              <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">{selectedLead.name}</h2>
-                  <p className="text-sm text-gray-500 flex items-center gap-2 mt-1"><Phone size={14}/> {selectedLead.phone} • <MapPin size={14}/> {selectedLead.location}</p>
-                </div>
-                <button onClick={() => setSelectedLead(null)} className="p-2 hover:bg-gray-200 rounded-full"><X size={20}/></button>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6 space-y-8">
-                {/* COMMENTS SECTION */}
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><MessageSquare size={18}/> Comments / Notes</h3>
-                  <div className="bg-gray-50 p-4 rounded-xl border space-y-3 mb-3">
-                    {selectedLead.comments.length === 0 ? <p className="text-sm text-gray-400 italic">No comments yet.</p> : 
-                      selectedLead.comments.map((c, i) => <div key={i} className="bg-white p-3 rounded border text-sm text-gray-700">{c}</div>)
-                    }
-                  </div>
-                  <div className="flex gap-2">
-                    <input className="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Add note..." value={newComment} onChange={e => setNewComment(e.target.value)} />
-                    <button onClick={addComment} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Add</button>
-                  </div>
-                </div>
-
-                {/* DOCUMENTS SECTION */}
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2"><FileText size={18}/> Documents</h3>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    {selectedLead.docs.map((doc, i) => (
-                      <div key={i} className="p-3 border rounded-lg flex items-center gap-2 bg-blue-50 text-blue-700 text-sm truncate">
-                        <FileText size={16}/> {doc}
-                      </div>
-                    ))}
-                  </div>
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium">
-                    <Upload size={16}/> Upload Document
-                    <input type="file" className="hidden" onChange={handleFileUpload} />
-                  </label>
-                </div>
-              </div>
+        {/* Filters Card */}
+        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-2 mb-6 text-gray-800 font-bold">
+            <Filter size={18} /> Filters
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Date From</label>
+              <input type="date" className="w-full p-2 border border-gray-200 rounded text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Date To</label>
+              <input type="date" className="w-full p-2 border border-gray-200 rounded text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Min Price</label>
+              <input type="number" placeholder="e.g. 1000000" className="w-full p-2 border border-gray-200 rounded text-sm" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">Max Price</label>
+              <input type="number" placeholder="e.g. 5000000" className="w-full p-2 border border-gray-200 rounded text-sm" />
             </div>
           </div>
-        )}
 
-        <AddLeadModal isOpen={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onSave={handleSaveLead} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-2">Status</label>
+              <div className="flex gap-4 text-sm text-gray-600">
+                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> New</label>
+                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Contacted</label>
+                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Visit Scheduled</label>
+                <label className="flex items-center gap-2"><input type="checkbox" className="rounded" /> Closed</label>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <button className="bg-gray-800 text-white px-4 py-2 rounded text-sm font-medium hover:bg-gray-900">
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Lead Cards List */}
+        <div className="space-y-4">
+          {leads.map((lead) => (
+            <div key={lead.id} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <span className="text-xs text-gray-500 font-medium">Lead ID</span>
+                  <h3 className="text-lg font-bold text-gray-900">{lead.id}</h3>
+                </div>
+                <div className="flex items-center gap-3">
+                  {getStatusBadge(lead.status)}
+                  <button className="text-gray-400 hover:text-indigo-600"><Edit2 size={16} /></button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-4 border-t border-b border-gray-50 mb-4 text-sm">
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Calendar size={16} className="text-indigo-500" />
+                  {lead.date}
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <MapPin size={16} className="text-indigo-500" />
+                  {lead.lat}, {lead.lng}
+                </div>
+                <div className="text-gray-900 font-medium">
+                  ₹ {Number(lead.price).toLocaleString()}
+                </div>
+                <div className="text-gray-900 font-medium">
+                  Acres: {lead.acres}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm font-bold text-gray-700">Site Visit:</span>
+                {lead.visitDone ? <CheckCircle size={18} className="text-green-500" /> : <span className="text-xs text-gray-400">Not done</span>}
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg w-48 border border-gray-100 flex flex-col items-center text-center">
+                <FileText size={24} className="text-gray-400 mb-2" />
+                <span className="text-xs text-gray-500 truncate w-full">property_plan.pdf</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <AddLeadModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onSave={handleSaveLead} 
+        />
       </div>
     </Layout>
   );
