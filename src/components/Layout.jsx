@@ -18,20 +18,40 @@ export default function Layout({ children }) {
           <nav className="flex flex-1 flex-col">
             <ul className="flex flex-1 flex-col gap-y-1">
               <li>
-                <Link to="/leads" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/leads' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                <Link 
+                  to="/leads" 
+                  className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${
+                    location.pathname === '/leads' 
+                      ? 'bg-indigo-50 text-indigo-700' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
                   <LayoutDashboard className="h-5 w-5" />
                   Dashboard
                 </Link>
               </li>
               <li>
-                <Link to="/inventory" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/inventory' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600 hover:bg-gray-50'}`}>
+                <Link 
+                  to="/inventory" 
+                  className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${
+                    location.pathname === '/inventory' 
+                      ? 'bg-indigo-50 text-indigo-700' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
                   <Home className="h-5 w-5" />
                   Inventory
                 </Link>
               </li>
             </ul>
             <div className="border-t border-gray-100 pt-4 pb-4">
-              <button onClick={() => { localStorage.removeItem('token'); navigate('/login'); }} className="group flex w-full gap-x-3 rounded-md p-3 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600">
+              <button 
+                onClick={() => { 
+                  localStorage.removeItem('token'); 
+                  navigate('/'); 
+                }} 
+                className="group flex w-full gap-x-3 rounded-md p-3 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600"
+              >
                 <LogOut className="h-5 w-5" />
                 Sign Out
               </button>
@@ -42,7 +62,11 @@ export default function Layout({ children }) {
 
       {/* Mobile Top Bar */}
       <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm lg:hidden">
-        <button type="button" onClick={() => setMobileMenuOpen(true)} className="-m-2.5 p-2.5 text-gray-700">
+        <button 
+          type="button" 
+          onClick={() => setMobileMenuOpen(true)} 
+          className="-m-2.5 p-2.5 text-gray-700"
+        >
           <Menu className="h-6 w-6" />
         </button>
         <div className="flex-1 text-sm font-semibold text-gray-900">Sameera</div>
@@ -51,11 +75,18 @@ export default function Layout({ children }) {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="relative z-50 lg:hidden">
-          <div className="fixed inset-0 bg-gray-900/80" onClick={() => setMobileMenuOpen(false)}></div>
+          <div 
+            className="fixed inset-0 bg-gray-900/80" 
+            onClick={() => setMobileMenuOpen(false)}
+          ></div>
           <div className="fixed inset-0 flex">
             <div className="relative mr-16 flex w-full max-w-xs flex-1">
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
-                <button type="button" onClick={() => setMobileMenuOpen(false)} className="-m-2.5 p-2.5">
+                <button 
+                  type="button" 
+                  onClick={() => setMobileMenuOpen(false)} 
+                  className="-m-2.5 p-2.5"
+                >
                   <X className="h-6 w-6 text-white" />
                 </button>
               </div>
@@ -66,13 +97,29 @@ export default function Layout({ children }) {
                 <nav className="flex flex-1 flex-col">
                   <ul className="flex flex-1 flex-col gap-y-1">
                     <li>
-                      <Link onClick={() => setMobileMenuOpen(false)} to="/leads" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/leads' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}>
+                      <Link 
+                        onClick={() => setMobileMenuOpen(false)} 
+                        to="/leads" 
+                        className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${
+                          location.pathname === '/leads' 
+                            ? 'bg-indigo-50 text-indigo-700' 
+                            : 'text-gray-600'
+                        }`}
+                      >
                         <LayoutDashboard className="h-5 w-5" />
                         Dashboard
                       </Link>
                     </li>
                     <li>
-                      <Link onClick={() => setMobileMenuOpen(false)} to="/inventory" className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${location.pathname === '/inventory' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}>
+                      <Link 
+                        onClick={() => setMobileMenuOpen(false)} 
+                        to="/inventory" 
+                        className={`group flex gap-x-3 rounded-md p-3 text-sm font-medium ${
+                          location.pathname === '/inventory' 
+                            ? 'bg-indigo-50 text-indigo-700' 
+                            : 'text-gray-600'
+                        }`}
+                      >
                         <Home className="h-5 w-5" />
                         Inventory
                       </Link>
@@ -85,8 +132,8 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      {/* Main Content - THIS IS THE KEY CHANGE */}
-      <main className="lg:pl-64 w-full">
+      {/* Main Content */}
+      <main className="lg:pl-64">
         <div className="px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </div>

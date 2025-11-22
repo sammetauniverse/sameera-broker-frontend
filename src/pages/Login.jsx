@@ -3,82 +3,66 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
 export default function Login() {
-  const [username, setUsername] = useState(''); // Changed from email to username
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
     
     try {
-      // Send 'username' because your backend likely uses the default User model
-      // If your backend uses 'email' field for auth, you might need to adjust the backend.
-      // For now, we send whatever the user typed as the 'username' field.
-      const res = await api.post('token/', { username, password });
-      
-      localStorage.setItem('token', res.data.access);
-      // Optional: Store user details if returned
-      if (res.data.user) {
-          localStorage.setItem('user', JSON.stringify(res.data.user));
-      }
-      
+      const response = await api.post('login/', { username, password });
+      localStorage.setItem('token', response.data.token);
       navigate('/leads');
     } catch (err) {
-      console.error("Login error:", err);
-      setError('Invalid credentials. Please check your username/email and password.');
-    } finally {
-      setLoading(false);
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-indigo-900 mb-2">Sameera Broker Portal</h1>
-          <p className="text-gray-500 text-sm">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sameera Broker Portal</h1>
+          <p className="text-gray-600">Sign in to your account</p>
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-5">
+        
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">Username or Email</label>
-            <input
-              type="text" // Changed to text to allow usernames
+            <label className="block text-sm font-medium text-gray-700 mb-2">Username or Email</label>
+            <input 
+              type="text" 
               required
-              placeholder="Enter your username or email"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
           </div>
+          
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">Password</label>
-            <input
-              type="password"
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <input 
+              type="password" 
               required
-              placeholder="••••••••"
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-gray-800 placeholder-gray-400"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-
-          <button
+          
+          {error && (
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          
+          <button 
             type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors shadow-lg shadow-indigo-200 disabled:opacity-70"
+            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            Sign In
           </button>
         </form>
       </div>

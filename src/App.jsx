@@ -4,16 +4,23 @@ import Leads from './pages/Leads';
 import Inventory from './pages/Inventory';
 
 function App() {
-    return (
-        <BrowserRouter>
-            <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/leads" element={<Leads />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="*" element={<Navigate to="/login" />} />
-            </Routes>
-        </BrowserRouter>
-    );
+  const isAuthenticated = !!localStorage.getItem('token');
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route 
+          path="/leads" 
+          element={isAuthenticated ? <Leads /> : <Navigate to="/" />} 
+        />
+        <Route 
+          path="/inventory" 
+          element={isAuthenticated ? <Inventory /> : <Navigate to="/" />} 
+        />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
