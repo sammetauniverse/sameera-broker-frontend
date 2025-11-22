@@ -8,8 +8,8 @@ export default function Layout({ children }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <>
-      {/* Desktop Sidebar - Fixed Left */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Desktop Sidebar */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200 px-6">
           <div className="flex h-16 shrink-0 items-center border-b border-gray-100">
@@ -48,7 +48,7 @@ export default function Layout({ children }) {
         <div className="flex-1 text-sm font-semibold text-gray-900">Sameera</div>
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="relative z-50 lg:hidden">
           <div className="fixed inset-0 bg-gray-900/80" onClick={() => setMobileMenuOpen(false)}></div>
@@ -85,12 +85,12 @@ export default function Layout({ children }) {
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="lg:pl-64">
-        <main className="py-6 px-4 sm:px-6 lg:px-8 bg-gray-50 min-h-screen">
+      {/* Main Content - THIS IS THE KEY CHANGE */}
+      <main className="lg:pl-64 w-full">
+        <div className="px-4 py-6 sm:px-6 lg:px-8">
           {children}
-        </main>
-      </div>
-    </>
+        </div>
+      </main>
+    </div>
   );
 }
