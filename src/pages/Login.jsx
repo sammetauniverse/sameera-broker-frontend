@@ -6,18 +6,31 @@ export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
+    // --- SPECIAL BYPASS CODE START ---
+    if (username === 'admin' && password === 'admin') {
+      console.log("Demo Mode Activated");
+      localStorage.setItem('token', 'demo-token');
+      navigate('/leads');
+      return; // Stop here, don't call backend
+    }
+    // --- SPECIAL BYPASS CODE END ---
+
     try {
       const response = await api.post('login/', { username, password });
       localStorage.setItem('token', response.data.token);
       navigate('/leads');
     } catch (err) {
-      setError('Invalid credentials');
+      setError('Backend is down. Use username "admin" and password "admin" to enter.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -31,13 +44,13 @@ export default function Login() {
         
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Username or Email</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
             <input 
               type="text" 
-              required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              placeholder="Type 'admin'"
             />
           </div>
           
@@ -45,15 +58,15 @@ export default function Login() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
             <input 
               type="password" 
-              required
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              placeholder="Type 'admin'"
             />
           </div>
           
           {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-bold">
               {error}
             </div>
           )}
