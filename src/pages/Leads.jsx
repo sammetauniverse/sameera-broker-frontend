@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '../api';
 import Layout from '../components/Layout';
 import AddLeadModal from '../components/AddLeadModal';
-import { Plus, Phone, MapPin, Search, Filter, FileText, Calendar, MoreVertical } from 'lucide-react';
+import { Plus, Phone, MapPin, Search, Filter, FileText, MoreVertical } from 'lucide-react';
 
 export default function Leads() {
   const [leads, setLeads] = useState([]);
@@ -19,19 +19,16 @@ export default function Leads() {
     fetchLeads();
   }, []);
 
-  // Search Functionality
   const filteredLeads = leads.filter(lead => 
     lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.phone?.includes(searchTerm) ||
     lead.location?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Helper to style status badges
   const getStatusStyle = (status) => {
     switch(status?.toLowerCase()) {
       case 'new': return 'bg-blue-50 text-blue-700 border-blue-100';
       case 'contacted': return 'bg-yellow-50 text-yellow-700 border-yellow-100';
-      case 'interested': return 'bg-purple-50 text-purple-700 border-purple-100';
       case 'closed': return 'bg-green-50 text-green-700 border-green-100';
       default: return 'bg-gray-50 text-gray-600 border-gray-100';
     }
@@ -41,7 +38,7 @@ export default function Leads() {
     <Layout>
       <div className="max-w-7xl mx-auto">
         
-        {/* --- Header Section --- */}
+        {/* --- PAGE HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Leads Dashboard</h1>
@@ -56,7 +53,7 @@ export default function Leads() {
           </button>
         </div>
 
-        {/* --- Filters Section (Matches Screenshot) --- */}
+        {/* --- FILTERS SECTION --- */}
         <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mb-6">
           <div className="flex items-center gap-2 mb-4 text-gray-800 font-semibold text-sm">
             <Filter size={16} className="text-indigo-600" /> 
@@ -64,7 +61,6 @@ export default function Leads() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Search Input */}
             <div className="md:col-span-1">
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Search</label>
               <div className="relative group">
@@ -78,16 +74,6 @@ export default function Leads() {
                 />
               </div>
             </div>
-
-            {/* Date Filter (Placeholder) */}
-            <div>
-              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Date From</label>
-              <div className="relative">
-                <input type="date" className="w-full pl-3 pr-3 py-2 bg-gray-50 border border-transparent rounded-lg text-sm text-gray-600 outline-none" />
-              </div>
-            </div>
-
-            {/* Status Filter (Placeholder) */}
             <div>
               <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 block">Status</label>
               <select className="w-full px-3 py-2 bg-gray-50 border border-transparent rounded-lg text-sm text-gray-600 outline-none appearance-none">
@@ -97,8 +83,7 @@ export default function Leads() {
                 <option>Closed</option>
               </select>
             </div>
-
-            {/* Apply Button */}
+            <div></div> {/* Spacer */}
             <div className="flex items-end">
               <button className="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition-colors">
                 Apply Filters
@@ -107,7 +92,7 @@ export default function Leads() {
           </div>
         </div>
 
-        {/* --- Leads Table --- */}
+        {/* --- TABLE SECTION --- */}
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
           {filteredLeads.length > 0 ? (
             <div className="overflow-x-auto">
@@ -127,7 +112,7 @@ export default function Leads() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs border border-indigo-200">
-                            {lead.name.charAt(0).toUpperCase()}
+                            {lead.name ? lead.name.charAt(0).toUpperCase() : 'U'}
                           </div>
                           <div>
                             <p className="text-sm font-semibold text-gray-900">{lead.name}</p>
@@ -179,7 +164,6 @@ export default function Leads() {
           )}
         </div>
 
-        {/* --- Modal --- */}
         <AddLeadModal 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
