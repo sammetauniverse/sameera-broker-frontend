@@ -3,21 +3,24 @@ import Layout from '../components/Layout';
 import { Camera, Save, Loader } from 'lucide-react';
 
 export default function Profile() {
+  const currentUser = localStorage.getItem('currentUser'); // Get logged-in user
+  const profileKey = `userProfile_${currentUser}`; // Unique key for THIS user
+
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState({
-    name: 'Sameera Bangalore',
-    phone: '+91 98765 43210',
+    name: currentUser || 'User',
+    phone: '',
     avatar: null
   });
 
-  // Load saved profile on startup
+  // Load saved profile SPECIFIC to this user
   useEffect(() => {
-    const savedProfile = localStorage.getItem('userProfile');
+    const savedProfile = localStorage.getItem(profileKey);
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
     }
     setIsLoading(false);
-  }, []);
+  }, [profileKey]);
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -32,8 +35,10 @@ export default function Profile() {
   };
 
   const handleSave = () => {
-    localStorage.setItem('userProfile', JSON.stringify(profile));
+    localStorage.setItem(profileKey, JSON.stringify(profile)); // Save to unique key
     alert("Profile updated successfully!");
+    // Force reload to update header avatar immediately (optional but good UX)
+    window.location.reload(); 
   };
 
   if (isLoading) return <div className="p-10 text-center">Loading...</div>;
@@ -46,12 +51,12 @@ export default function Profile() {
         <div className="bg-white rounded-xl shadow-sm p-8 border border-gray-100">
           <div className="flex justify-center mb-8">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
                 {profile.avatar ? (
                   <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-indigo-50 text-indigo-300 font-bold text-4xl">
-                    {profile.name.charAt(0)}
+                  <div className="text-indigo-300 font-bold text-4xl uppercase">
+                    {profile.name ? profile.name.charAt(0) : 'U'}
                   </div>
                 )}
               </div>
@@ -79,6 +84,7 @@ export default function Profile() {
                 type="text" 
                 value={profile.phone}
                 onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                placeholder="+91 00000 00000"
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50"
               />
             </div>
