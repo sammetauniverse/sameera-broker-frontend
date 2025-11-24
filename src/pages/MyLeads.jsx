@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { MapPin, FileText, Image as ImageIcon } from 'lucide-react';
+import AddLeadModal from '../components/AddLeadModal';
+import { MapPin, FileText, Image as ImageIcon, Edit as EditIcon } from 'lucide-react';
 
 export default function MyLeads() {
   const currentUser = localStorage.getItem('currentUser');
@@ -8,12 +9,30 @@ export default function MyLeads() {
   const [leads, setLeads] = useState([]);
   const [viewingFiles, setViewingFiles] = useState(null);
 
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingLead, setEditingLead] = useState(null);
+
   useEffect(() => {
     const saved = localStorage.getItem(SHARED_KEY);
     if (saved) {
       setLeads(JSON.parse(saved).filter(lead => lead.createdBy === currentUser));
     }
   }, [currentUser]);
+
+  // Update the single edited lead (and localStorage)
+  const handleEditSave = (updatedData) => {
+    setLeads(leads.map(l => l.id === editingLead.id ? { ...l, ...updatedData } : l));
+    // Also patch in localStorage for global/all-leads
+    const allLeads = JSON.parse(localStorage.getItem(SHARED_KEY)) || [];
+    const idx = allLeads.findIndex(l => l.id === editingLead.id);
+    if (idx !== -1) {
+      allLeads[idx] = { ...allLeads[idx], ...updatedData };
+      localStorage.setItem(SHARED_KEY, JSON.stringify(allLeads));
+    }
+    setEditingLead(null);
+    setShowEditModal(false);
+  };
 
   return (
     <Layout>
@@ -29,6 +48,7 @@ export default function MyLeads() {
                 <th className="p-4">Google Pin</th>
                 <th className="p-4">Price</th>
                 <th className="p-4 text-center">Media</th>
+                <th className="p-4 text-center">Edit</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -51,15 +71,25 @@ export default function MyLeads() {
                       </span>
                     ) : <span className="text-gray-300">-</span>}
                   </td>
+                  <td className="p-4 text-center">
+                    <button
+                      className="p-2 text-yellow-600 hover:text-yellow-800"
+                      title="Edit"
+                      onClick={() => { setEditingLead(lead); setShowEditModal(true); }}
+                    >
+                      <EditIcon size={16} />
+                    </button>
+                  </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="6" className="p-8 text-center text-gray-400">No leads uploaded by you yet.</td>
+                  <td colSpan="7" className="p-8 text-center text-gray-400">No leads uploaded by you yet.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+        {/* FILE MODAL */}
         {viewingFiles && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40">
             <div className="bg-white rounded-xl p-6 shadow-lg w-full max-w-md">
@@ -80,6 +110,13 @@ export default function MyLeads() {
             </div>
           </div>
         )}
+        {/* EDIT MODAL */}
+        <AddLeadModal
+          isOpen={showEditModal}
+          initialData={editingLead}
+          onClose={() => { setEditingLead(null); setShowEditModal(false); }}
+          onSave={handleEditSave}
+        />
       </div>
     </Layout>
   );
