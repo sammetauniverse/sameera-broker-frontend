@@ -28,7 +28,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
   useEffect(() => {
     if (initialData) {
       setFormData({ ...initialData });
-      setFiles(initialData.files || []);
+      setFiles(Array.isArray(initialData.files) ? initialData.files : []);
     }
   }, [initialData, isOpen]);
 
@@ -37,7 +37,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
   // Accept all files, skip nulls (oversize)
   const handleFileChange = async (e) => {
     const fileObjs = (await Promise.all(Array.from(e.target.files).map(getFileObj))).filter(Boolean);
-    setFiles(prev => [...prev, ...fileObjs]);
+    setFiles(prev => Array.isArray(prev) ? [...prev, ...fileObjs] : [...fileObjs]);
   };
 
   const handleSubmit = (e) => {
@@ -49,15 +49,14 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
     onSave({
       ...formData,
       converted: formData.isConverted || formData.converted,
-      files, hasFiles: files.length > 0
+      files: Array.isArray(files) ? files : [],
+      hasFiles: Array.isArray(files) && files.length > 0
     });
     setFiles([]);
     setFormData({
       date: new Date().toISOString().split('T')[0],
       name: '', phone: '', address: '', googlePin: '',
-      acres: '', price: '',
-      siteVisitDone: false, isConverted: false, converted: false,
-      comments: ''
+      acres: '', price: '', siteVisitDone: false, isConverted: false, converted: false, comments: ''
     });
     onClose();
   };
@@ -91,7 +90,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
             <span className="block mt-2 text-sm text-indigo-600">Click to upload any file (max 5MB each)</span>
             <input type="file" multiple className="hidden" onChange={handleFileChange} />
           </label>
-          {files.length > 0 &&
+          {Array.isArray(files) && files.length > 0 &&
             <div className="mt-2 flex flex-wrap gap-2">
               {files.map((f, i) => {
                 const isImage = f.url && f.url.startsWith("data:image");
