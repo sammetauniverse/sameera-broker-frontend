@@ -11,8 +11,20 @@ export default function Register() {
       alert("Passwords do not match!");
       return;
     }
-    // Simulate registration
-    alert("Registration Successful! Please Login.");
+
+    // 1. Save Credentials to LocalStorage (Mini Database)
+    const newUser = { username: formData.username, password: formData.password };
+    localStorage.setItem('registeredUser', JSON.stringify(newUser));
+
+    // 2. Create a default profile for this user
+    const defaultProfile = {
+      name: formData.username,
+      phone: '+91 00000 00000',
+      avatar: null // No photo yet
+    };
+    localStorage.setItem('userProfile', JSON.stringify(defaultProfile));
+
+    alert("Registration Successful! You can now login.");
     navigate('/');
   };
 

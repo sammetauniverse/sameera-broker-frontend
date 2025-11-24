@@ -9,25 +9,27 @@ export default function Login() {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    e.stopPropagation();
+    
+    // 1. Get registered user from storage
+    const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
 
-    console.log("Attempting login with:", username);
+    // 2. Check credentials (Admin OR Registered User)
+    const isAdmin = username === 'admin' && password === 'admin';
+    const isUser = storedUser && username === storedUser.username && password === storedUser.password;
 
-    // --- ADMIN BYPASS ---
-    if (username === 'admin' && password === 'admin') {
-      console.log("✅ Admin verified. Redirecting...");
-      localStorage.setItem('token', 'demo-token-12345');
+    if (isAdmin || isUser) {
+      console.log("Login successful");
+      localStorage.setItem('token', 'demo-token-secure');
       
-      setTimeout(() => {
-        navigate('/leads');
-      }, 100);
-      
-      return false;
+      // If it's admin, ensure a default profile exists if not already
+      if (isAdmin && !localStorage.getItem('userProfile')) {
+        localStorage.setItem('userProfile', JSON.stringify({ name: 'Administrator', avatar: null }));
+      }
+
+      setTimeout(() => navigate('/leads'), 100);
+    } else {
+      setError('Invalid credentials. Try "admin" / "admin" or your registered account.');
     }
-
-    // Error for wrong credentials
-    setError('Invalid credentials. Use username: admin, password: admin');
-    return false;
   };
 
   return (
@@ -46,7 +48,7 @@ export default function Login() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="admin"
+              placeholder="Enter username"
             />
           </div>
           
@@ -57,7 +59,7 @@ export default function Login() {
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="admin"
+              placeholder="Enter password"
             />
           </div>
           
@@ -67,19 +69,14 @@ export default function Login() {
             </div>
           )}
           
-          <button 
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors"
-          >
+          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">
             Sign In
           </button>
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-600">
           Don't have an account? 
-          <Link to="/register" className="text-indigo-600 font-bold hover:underline ml-1">
-            Register here
-          </Link>
+          <Link to="/register" className="text-indigo-600 font-bold hover:underline ml-1">Register here</Link>
         </div>
       </div>
     </div>
