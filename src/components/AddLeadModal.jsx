@@ -13,14 +13,9 @@ function getFileObj(file) {
 export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
-    name: '',
-    phone: '',
-    address: '',      // <-- Street address
-    googlePin: '',
-    acres: '',
-    price: '',
-    siteVisitDone: false,
-    isConverted: false,
+    name: '', phone: '', address: '', googlePin: '',
+    acres: '', price: '',
+    siteVisitDone: false, isConverted: false, converted: false,
     comments: ''
   });
   const [files, setFiles] = useState([]);
@@ -34,24 +29,29 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.acres || !formData.price || !formData.googlePin || !formData.address) {
-      alert("Fill all mandatory fields: Name, Address, Location, Acres, Price.");
+    // Required field check
+    if (!formData.name || !formData.address || !formData.googlePin || !formData.acres || !formData.price) {
+      alert("Fill all required fields: Name, Address, Google Pin, Acres, Price.");
       return;
     }
     onSave({
       ...formData,
-      files,
-      hasFiles: files.length > 0
+      converted: formData.isConverted || formData.converted, // Legacy safe
+      files, hasFiles: files.length > 0
     });
     onClose();
     setFiles([]);
-    setFormData({ date: new Date().toISOString().split('T')[0], name: '', phone: '', address: '', googlePin: '', acres: '', price: '', siteVisitDone: false, isConverted: false, comments: '' });
+    setFormData({
+      date: new Date().toISOString().split('T')[0],
+      name: '', phone: '', address: '', googlePin: '',
+      acres: '', price: '', siteVisitDone: false, isConverted: false, converted: false, comments: ''
+    });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95">
-        <div className="flex justify-between items-center p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b bg-white z-10">
           <h2 className="text-xl font-bold text-gray-900">Upload New Lead / Land</h2>
           <button onClick={onClose}><X className="text-gray-400 hover:text-gray-600" /></button>
         </div>
