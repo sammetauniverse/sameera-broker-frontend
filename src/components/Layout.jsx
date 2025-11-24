@@ -3,18 +3,17 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, PlusCircle, User, LogOut } from 'lucide-react';
 import AddLeadModal from './AddLeadModal';
 
-export default function Layout({ children, onSaveLead }) {
+export default function Layout({ children, onLeadAdd }) {
   const navigate = useNavigate();
   const location = useLocation();
   const currentUser = localStorage.getItem('currentUser') || 'User';
 
-  // Modal state here!
-  const [isAddLeadOpen, setIsAddLeadOpen] = useState(false);
+  const [addLeadOpen, setAddLeadOpen] = useState(false);
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/leads' },
-    { name: 'Add New Lead', icon: <PlusCircle size={20} />, action: 'openModal' },
-    { name: 'Profile', icon: <User size={20} />, path: '/profile' },
+    { name: 'Add New Lead', icon: <PlusCircle size={20} />, action: () => setAddLeadOpen(true) },
+    { name: 'Profile', icon: <User size={20} />, path: '/profile' }
   ];
 
   return (
@@ -27,7 +26,7 @@ export default function Layout({ children, onSaveLead }) {
           {menuItems.map((item) => (
             <button
               key={item.name}
-              onClick={() => item.path ? navigate(item.path) : setIsAddLeadOpen(true)}
+              onClick={() => item.action ? item.action() : navigate(item.path)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                 location.pathname === item.path 
                   ? 'bg-indigo-600 text-white shadow-md' 
@@ -61,9 +60,9 @@ export default function Layout({ children, onSaveLead }) {
         {children}
       </div>
       <AddLeadModal
-        isOpen={isAddLeadOpen}
-        onClose={() => setIsAddLeadOpen(false)}
-        onSave={onSaveLead}
+        isOpen={addLeadOpen}
+        onClose={() => setAddLeadOpen(false)}
+        onSave={data => { onLeadAdd(data); setAddLeadOpen(false); }}
       />
     </div>
   );

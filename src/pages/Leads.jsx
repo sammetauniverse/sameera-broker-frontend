@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
-import { Filter, MapPin, Calendar, CheckCircle, XCircle, FileText, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Calendar, CheckCircle, XCircle, FileText, Image as ImageIcon } from 'lucide-react';
 
 export default function Leads() {
   const currentUser = localStorage.getItem('currentUser');
@@ -11,17 +11,14 @@ export default function Leads() {
   });
   const [viewingFiles, setViewingFiles] = useState(null);
 
-  useEffect(() => {
-    localStorage.setItem(SHARED_KEY, JSON.stringify(leads));
-  }, [leads]);
+  useEffect(() => { localStorage.setItem(SHARED_KEY, JSON.stringify(leads)); }, [leads]);
 
-  // Handler receives new lead from modal (see Layout)
   const handleSaveLead = (leadData) => {
     setLeads([{ ...leadData, id: `SL-${Math.floor(100000 + Math.random() * 900000)}`, createdBy: currentUser }, ...leads]);
   };
 
   return (
-    <Layout onSaveLead={handleSaveLead}>
+    <Layout onLeadAdd={handleSaveLead}>
       <div className="max-w-7xl mx-auto space-y-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Leads Dashboard (All Fields)</h1>
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -85,7 +82,12 @@ export default function Leads() {
               <ul className="space-y-2">
                 {viewingFiles.map((file, idx) => (
                   <li key={idx} className="flex items-center gap-2">
-                    <FileText size={16}/> <span>{file}</span>
+                    {file.url ? (
+                      <img src={file.url} alt={file.name} className="w-12 h-12 rounded shadow-md object-cover"/>
+                    ) : (
+                      <FileText size={16}/>
+                    )}
+                    <span>{file.name}</span>
                   </li>
                 ))}
               </ul>

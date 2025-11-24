@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 
+function getFileObj(file) {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith("image/")) return resolve({ name: file.name, url: null });
+    const reader = new FileReader();
+    reader.onload = e => resolve({ name: file.name, url: e.target.result });
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -18,9 +27,9 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files).map(f => f.name);
-    setFiles(prev => [...prev, ...newFiles]);
+  const handleFileChange = async (e) => {
+    const fileObjs = await Promise.all(Array.from(e.target.files).map(getFileObj));
+    setFiles(prev => [...prev, ...fileObjs]);
   };
 
   const handleSubmit = (e) => {
@@ -47,7 +56,6 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
           <button onClick={onClose}><X className="text-gray-400 hover:text-gray-600" /></button>
         </div>
         <form onSubmit={handleSubmit} className="p-8 space-y-4">
-
           <input type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full p-2.5 border rounded-lg"/>
           <input placeholder="Owner Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="w-full p-2.5 border rounded-lg" />
           <input placeholder="Phone" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full p-2.5 border rounded-lg" />
@@ -70,7 +78,12 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
             <input type="file" multiple className="hidden" onChange={handleFileChange}/>
           </label>
           {files.length > 0 && 
-            <div className="mt-2 text-xs text-gray-500">{files.length} file(s): {files.join(', ')}</div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {files.map((f, i) => (
+                f.url ? <img key={i} src={f.url} alt={f.name} className="w-16 h-16 rounded shadow-md object-cover"/> : 
+                <span key={i} className="px-2 py-1 bg-gray-100 rounded border border-gray-200 text-xs">{f.name}</span>
+              ))}
+            </div>
           }
           <button className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg" type="submit">Upload Lead</button>
         </form>
