@@ -2,15 +2,16 @@ import { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 
 function getFileObj(file) {
-  // If file is already { name, url }, return as is; else process File
-  if (file && typeof file === 'object' && 'name' in file && ('url' in file)) return Promise.resolve(file);
   return new Promise((resolve) => {
-    if (!file.type || !file.type.startsWith("image/")) return resolve({ name: file.name, url: null });
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      return resolve({ name: file.name, url: null });
+    }
     const reader = new FileReader();
     reader.onload = e => resolve({ name: file.name, url: e.target.result });
     reader.readAsDataURL(file);
   });
 }
+
 
 export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
   const [formData, setFormData] = useState({
