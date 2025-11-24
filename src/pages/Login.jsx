@@ -7,13 +7,13 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+   const handleLogin = (e) => {
     e.preventDefault();
     
     // 1. Get registered user from storage
     const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
 
-    // 2. Check credentials (Admin OR Registered User)
+    // 2. Check credentials
     const isAdmin = username === 'admin' && password === 'admin';
     const isUser = storedUser && username === storedUser.username && password === storedUser.password;
 
@@ -21,16 +21,20 @@ export default function Login() {
       console.log("Login successful");
       localStorage.setItem('token', 'demo-token-secure');
       
-      // If it's admin, ensure a default profile exists if not already
-      if (isAdmin && !localStorage.getItem('userProfile')) {
-        localStorage.setItem('userProfile', JSON.stringify({ name: 'Administrator', avatar: null }));
+      // --- NEW: Save current username so we know whose data to load ---
+      localStorage.setItem('currentUser', username); 
+
+      // If it's admin, ensure a default profile exists
+      if (isAdmin && !localStorage.getItem('userProfile_admin')) {
+        localStorage.setItem('userProfile_admin', JSON.stringify({ name: 'Administrator', avatar: null }));
       }
 
       setTimeout(() => navigate('/leads'), 100);
     } else {
-      setError('Invalid credentials. Try "admin" / "admin" or your registered account.');
+      setError('Invalid credentials.');
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center p-4">
