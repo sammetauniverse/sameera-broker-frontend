@@ -5,21 +5,18 @@ import AddPropertyModal from '../components/AddPropertyModal';
 import { 
   MapPin, IndianRupee, Trash2, Plus, Filter, X, 
   Image as ImageIcon, FileText, MessageSquare, Upload, 
-  ChevronDown, User, LogOut, Lock, Edit3 
+  ChevronDown, User, LogOut, Search 
 } from 'lucide-react';
 
 export default function Inventory() {
   const navigate = useNavigate();
   const currentUser = localStorage.getItem('currentUser');
-  
-  // --- 1. SHARED DB KEY ---
   const SHARED_KEY = 'SHARED_INVENTORY_DB';
   const profileKey = `userProfile_${currentUser}`;
 
-  // Redirect if not logged in
   useEffect(() => { if (!currentUser) navigate('/'); }, [currentUser, navigate]);
 
-  // --- 2. LOAD SHARED DATA ---
+  // Load Data
   const [properties, setProperties] = useState(() => {
     const saved = localStorage.getItem(SHARED_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -28,10 +25,16 @@ export default function Inventory() {
   const [profile, setProfile] = useState({ name: currentUser || 'User', avatar: null });
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  
-  // DETAIL VIEW STATE
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [newComment, setNewComment] = useState("");
+
+  // --- NEW: FILTERS STATE ---
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'All',
+    minPrice: '',
+    maxPrice: ''
+  });
 
   // Save to Storage
   useEffect(() => {
@@ -44,13 +47,23 @@ export default function Inventory() {
     if (savedProfile) setProfile(JSON.parse(savedProfile));
   }, [profileKey]);
 
-  // --- ACTIONS ---
+  // --- FILTER LOGIC (Matches Dashboard) ---
+  const filteredProperties = properties.filter(property => {
+    const matchSearch = property.title?.toLowerCase().includes(filters.search.toLowerCase()) || 
+                        property.lat?.includes(filters.search) || 
+                        property.lng?.includes(filters.search);
+    const matchStatus = filters.status === 'All' || property.status === filters.status;
+    const matchMinPrice = !filters.minPrice || Number(property.price) >= Number(filters.minPrice);
+    const matchMaxPrice = !filters.maxPrice || Number(property.price) <= Number(filters.maxPrice);
+    return matchSearch && matchStatus && matchMinPrice && matchMaxPrice;
+  });
 
+  // --- HANDLERS (Same as before) ---
   const handleAddProperty = (propData) => {
     const newProp = {
       ...propData,
       id: Date.now(),
-      createdBy: currentUser, // Tag Owner
+      createdBy: currentUser,
       comments: propData.comments || [],
       docs: propData.files || []
     };
@@ -68,7 +81,15 @@ export default function Inventory() {
     }
   };
 
-  // --- DETAIL MODAL LOGIC ---
+  const canEdit = (owner) => currentUser === 'admin' || currentUser === owner;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    navigate('/');
+  };
+
+  // Detail Modal Handlers
   const handleAddComment = () => {
     if (!newComment.trim()) return;
     const updated = { ...selectedProperty, comments: [...selectedProperty.comments, newComment] };
@@ -85,8 +106,6 @@ export default function Inventory() {
     }
   };
 
-  const canEdit = (owner) => currentUser === 'admin' || currentUser === owner;
-
   return (
     <Layout>
       <div className="max-w-7xl mx-auto space-y-6">
@@ -99,7 +118,6 @@ export default function Inventory() {
               <Plus size={18} /> Add Property
             </button>
             
-            {/* PROFILE DROPDOWN */}
             <div className="relative">
               <button onClick={() => setIsProfileOpen(!isProfileOpen)} className="flex items-center gap-2 bg-white border px-4 py-2.5 rounded-xl">
                 <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center overflow-hidden">
@@ -111,60 +129,106 @@ export default function Inventory() {
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white shadow-xl border rounded-xl py-1 z-50">
                   <button onClick={() => navigate('/profile')} className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex gap-2"><User size={14}/> Profile</button>
-                  <button onClick={() => {localStorage.clear(); navigate('/')}} className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex gap-2"><LogOut size={14}/> Logout</button>
+                  <button onClick={handleLogout} className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex gap-2"><LogOut size={14}/> Logout</button>
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {/* --- FILTERS BAR (NEW) --- */}
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="col-span-1 md:col-span-4 flex items-center gap-2 font-bold text-gray-700 text-sm border-b pb-2 mb-2">
+            <Filter size={16} /> Filter Inventory
+          </div>
+          
+          {/* Search Input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
+            <input 
+              placeholder="Search Title or Location..." 
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={filters.search}
+              onChange={e => setFilters({...filters, search: e.target.value})}
+            />
+          </div>
+
+          {/* Status Dropdown */}
+          <select 
+            className="p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+            value={filters.status}
+            onChange={e => setFilters({...filters, status: e.target.value})}
+          >
+            <option value="All">All Status</option>
+            <option>Available</option>
+            <option>Sold</option>
+            <option>Pending</option>
+          </select>
+
+          {/* Min Price */}
+          <input 
+            type="number" 
+            placeholder="Min Price" 
+            className="p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.minPrice}
+            onChange={e => setFilters({...filters, minPrice: e.target.value})}
+          />
+
+          {/* Max Price */}
+          <input 
+            type="number" 
+            placeholder="Max Price" 
+            className="p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.maxPrice}
+            onChange={e => setFilters({...filters, maxPrice: e.target.value})}
+          />
+        </div>
+
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {properties.length > 0 ? (
-            properties.map((property) => (
-              <div key={property.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-                <div className="h-48 bg-gray-100 flex items-center justify-center text-gray-400 relative">
-                  <ImageIcon size={32} />
-                  <span className="absolute top-3 right-3 bg-white px-2 py-1 rounded text-xs font-bold shadow-sm">{property.status}</span>
+          {filteredProperties.length > 0 ? filteredProperties.map((property) => (
+            <div key={property.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+              <div className="h-48 bg-gray-100 flex items-center justify-center text-gray-400 relative">
+                <ImageIcon size={32} />
+                <span className="absolute top-3 right-3 bg-white px-2 py-1 rounded text-xs font-bold shadow-sm">{property.status}</span>
+              </div>
+              <div className="p-5">
+                <h3 className="font-bold text-lg truncate">{property.title}</h3>
+                <p className="text-indigo-600 font-bold text-xl mt-1">₹ {Number(property.price).toLocaleString()}</p>
+                
+                <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
+                  <MapPin size={14} /> {property.lat}, {property.lng}
                 </div>
-                <div className="p-5">
-                  <h3 className="font-bold text-lg truncate">{property.title}</h3>
-                  <p className="text-indigo-600 font-bold text-xl mt-1">₹ {Number(property.price).toLocaleString()}</p>
-                  
-                  <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
-                    <MapPin size={14} /> {property.lat}, {property.lng}
-                  </div>
 
-                  <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                    <div className="flex items-center gap-2">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white ${property.createdBy === currentUser ? 'bg-indigo-500' : 'bg-gray-400'}`}>
-                        {property.createdBy ? property.createdBy[0].toUpperCase() : 'U'}
-                      </div>
-                      <span className="text-xs text-gray-500">{property.createdBy === currentUser ? 'You' : property.createdBy}</span>
+                <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white ${property.createdBy === currentUser ? 'bg-indigo-500' : 'bg-gray-400'}`}>
+                      {property.createdBy ? property.createdBy[0].toUpperCase() : 'U'}
                     </div>
-                    
-                    {property.hasFiles && <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex gap-1"><FileText size={12}/> Files</span>}
+                    <span className="text-xs text-gray-500">{property.createdBy === currentUser ? 'You' : property.createdBy}</span>
                   </div>
+                  
+                  {property.hasFiles && <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex gap-1"><FileText size={12}/> Files</span>}
+                </div>
 
-                  <div className="flex gap-2 mt-4">
-                    <button onClick={() => setSelectedProperty(property)} className="flex-1 bg-gray-50 text-indigo-600 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50">View Details</button>
-                    {canEdit(property.createdBy) && (
-                      <button onClick={() => handleDelete(property.id, property.createdBy)} className="px-3 text-red-500 bg-red-50 rounded-lg hover:bg-red-100">
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
+                <div className="flex gap-2 mt-4">
+                  <button onClick={() => setSelectedProperty(property)} className="flex-1 bg-gray-50 text-indigo-600 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50">View Details</button>
+                  {canEdit(property.createdBy) && (
+                    <button onClick={() => handleDelete(property.id, property.createdBy)} className="px-3 text-red-500 bg-red-50 rounded-lg hover:bg-red-100">
+                      <Trash2 size={16} />
+                    </button>
+                  )}
                 </div>
               </div>
-            ))
-          ) : (
+            </div>
+          )) : (
             <div className="col-span-3 text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
-              No properties found. Add one to get started!
+              No properties found matching your filters.
             </div>
           )}
         </div>
 
-        {/* --- DETAILS MODAL (Comments & Files) --- */}
+        {/* --- DETAILS MODAL (Kept same) --- */}
         {selectedProperty && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm p-4">
             <div className="bg-white rounded-2xl w-full max-w-2xl h-[80vh] flex flex-col shadow-2xl">
