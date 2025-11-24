@@ -120,42 +120,48 @@ export default function Inventory() {
 
         {/* GRID */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {properties.map((property) => (
-            <div key={property.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
-              <div className="h-48 bg-gray-100 flex items-center justify-center text-gray-400 relative">
-                <ImageIcon size={32} />
-                <span className="absolute top-3 right-3 bg-white px-2 py-1 rounded text-xs font-bold shadow-sm">{property.status}</span>
-              </div>
-              <div className="p-5">
-                <h3 className="font-bold text-lg truncate">{property.title}</h3>
-                <p className="text-indigo-600 font-bold text-xl mt-1">₹ {Number(property.price).toLocaleString()}</p>
-                
-                <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
-                  <MapPin size={14} /> {property.lat}, {property.lng}
+          {properties.length > 0 ? (
+            properties.map((property) => (
+              <div key={property.id} className="bg-white border rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
+                <div className="h-48 bg-gray-100 flex items-center justify-center text-gray-400 relative">
+                  <ImageIcon size={32} />
+                  <span className="absolute top-3 right-3 bg-white px-2 py-1 rounded text-xs font-bold shadow-sm">{property.status}</span>
                 </div>
-
-                <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white ${property.createdBy === currentUser ? 'bg-indigo-500' : 'bg-gray-400'}`}>
-                      {property.createdBy ? property.createdBy[0].toUpperCase() : 'U'}
-                    </div>
-                    <span className="text-xs text-gray-500">{property.createdBy === currentUser ? 'You' : property.createdBy}</span>
-                  </div>
+                <div className="p-5">
+                  <h3 className="font-bold text-lg truncate">{property.title}</h3>
+                  <p className="text-indigo-600 font-bold text-xl mt-1">₹ {Number(property.price).toLocaleString()}</p>
                   
-                  {property.hasFiles && <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex gap-1"><FileText size={12}/> Files</span>}
-                </div>
+                  <div className="flex items-center gap-2 text-gray-500 text-sm mt-2">
+                    <MapPin size={14} /> {property.lat}, {property.lng}
+                  </div>
 
-                <div className="flex gap-2 mt-4">
-                  <button onClick={() => setSelectedProperty(property)} className="flex-1 bg-gray-50 text-indigo-600 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50">View Details</button>
-                  {canEdit(property.createdBy) && (
-                    <button onClick={() => handleDelete(property.id, property.createdBy)} className="px-3 text-red-500 bg-red-50 rounded-lg hover:bg-red-100">
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white ${property.createdBy === currentUser ? 'bg-indigo-500' : 'bg-gray-400'}`}>
+                        {property.createdBy ? property.createdBy[0].toUpperCase() : 'U'}
+                      </div>
+                      <span className="text-xs text-gray-500">{property.createdBy === currentUser ? 'You' : property.createdBy}</span>
+                    </div>
+                    
+                    {property.hasFiles && <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex gap-1"><FileText size={12}/> Files</span>}
+                  </div>
+
+                  <div className="flex gap-2 mt-4">
+                    <button onClick={() => setSelectedProperty(property)} className="flex-1 bg-gray-50 text-indigo-600 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50">View Details</button>
+                    {canEdit(property.createdBy) && (
+                      <button onClick={() => handleDelete(property.id, property.createdBy)} className="px-3 text-red-500 bg-red-50 rounded-lg hover:bg-red-100">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-span-3 text-center py-16 text-gray-500 bg-gray-50 rounded-2xl border border-dashed border-gray-300">
+              No properties found. Add one to get started!
             </div>
-          ))}
+          )}
         </div>
 
         {/* --- DETAILS MODAL (Comments & Files) --- */}
