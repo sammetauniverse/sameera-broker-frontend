@@ -43,7 +43,7 @@ export default function Leads() {
                   <td className="p-4 font-medium text-gray-900">{lead.name}</td>
                   <td className="p-4 text-sm">{lead.address}</td>
                   <td className="p-4 text-sm">
-                    <a href={lead.googlePin.startsWith('http') ? lead.googlePin : `https://maps.google.com/?q=${lead.googlePin}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-indigo-600 hover:underline">
+                    <a href={lead.googlePin && lead.googlePin.startsWith('http') ? lead.googlePin : `https://maps.google.com/?q=${lead.googlePin}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-indigo-600 hover:underline">
                       <MapPin size={12}/> Map
                     </a>
                   </td>
@@ -52,11 +52,12 @@ export default function Leads() {
                   <td className="p-4 text-center">
                     {lead.siteVisitDone ? <CheckCircle size={18} className="text-green-500 mx-auto"/> : <XCircle size={18} className="text-gray-300 mx-auto"/>}
                   </td>
+                  {/* FIX: Show converted as Yes if isConverted or legacy converted is true */}
                   <td className="p-4 text-center">
-                    {lead.isConverted ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-100">Yes</span> : '-'}
+                    {lead.isConverted || lead.converted ? <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold border border-green-100">Yes</span> : '-'}
                   </td>
                   <td className="p-4 text-center">
-                    {lead.hasFiles ? (
+                    {lead.hasFiles && lead.files && lead.files.length > 0 ? (
                       <span 
                         className="flex items-center gap-1 text-xs bg-gray-100 px-2 py-1 rounded border text-gray-600 cursor-pointer"
                         onClick={() => setViewingFiles(lead.files)}
@@ -82,12 +83,13 @@ export default function Leads() {
               <ul className="space-y-2">
                 {viewingFiles.map((file, idx) => (
                   <li key={idx} className="flex items-center gap-2">
+                    {/* Support both old (string) and new ({name,url}) */}
                     {file.url ? (
-                      <img src={file.url} alt={file.name} className="w-12 h-12 rounded shadow-md object-cover"/>
+                      <img src={file.url} alt={file.name || file} className="w-12 h-12 rounded shadow-md object-cover"/>
                     ) : (
-                      <FileText size={16}/>
+                      <FileText size={16} />
                     )}
-                    <span>{file.name}</span>
+                    <span>{file.name || file}</span>
                   </li>
                 ))}
               </ul>
