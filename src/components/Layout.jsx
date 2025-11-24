@@ -12,6 +12,7 @@ export default function Layout({ children, onLeadAdd }) {
 
   const menuItems = [
     { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/leads' },
+    { name: 'My Leads', icon: <User size={20} />, path: '/my-leads' }, // <-- Added!
     { name: 'Add New Lead', icon: <PlusCircle size={20} />, action: () => setAddLeadOpen(true) },
     { name: 'Profile', icon: <User size={20} />, path: '/profile' }
   ];
