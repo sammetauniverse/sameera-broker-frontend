@@ -7,8 +7,6 @@ import Profile from './pages/Profile';
 import MyLeads from './pages/MyLeads';
 
 import useGoogleDrive from './hooks/useGoogleDrive';
-import GoogleAuthButtons from './components/GoogleAuthButtons';
-
 // Optional: Place, customize, or theme this as your global layout/header
 function AppHeader() {
   return (
