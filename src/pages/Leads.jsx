@@ -1,3 +1,4 @@
+import FileUploader from '../components/FileUploader';
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { MapPin, CheckCircle, XCircle, FileText, Image as ImageIcon } from 'lucide-react';
