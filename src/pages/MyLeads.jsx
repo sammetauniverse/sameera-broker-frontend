@@ -9,25 +9,42 @@ export default function MyLeads() {
   const [leads, setLeads] = useState([]);
   const [viewingFiles, setViewingFiles] = useState(null);
 
-  // Edit modal state
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(SHARED_KEY);
     if (saved) {
-      setLeads(JSON.parse(saved).filter(lead => lead.createdBy === currentUser));
+      // Only use lightweight file references
+      setLeads(
+        JSON.parse(saved)
+          .filter(lead => lead.createdBy === currentUser)
+      );
     }
   }, [currentUser]);
 
-  // Update the single edited lead (and localStorage)
+  // Only save minimal file references to localStorage
   const handleEditSave = (updatedData) => {
-    setLeads(leads.map(l => l.id === editingLead.id ? { ...l, ...updatedData } : l));
-    // Also patch in localStorage for global/all-leads
+    const cleanedLeads = leads.map(l =>
+      l.id === editingLead.id ? { ...l, ...updatedData } : l
+    );
+    setLeads(cleanedLeads);
+
+    // Also patch localStorage
     const allLeads = JSON.parse(localStorage.getItem(SHARED_KEY)) || [];
     const idx = allLeads.findIndex(l => l.id === editingLead.id);
     if (idx !== -1) {
-      allLeads[idx] = { ...allLeads[idx], ...updatedData };
+      allLeads[idx] = {
+        ...allLeads[idx],
+        ...updatedData,
+        // Only keep file URLs+names in storage
+        files: Array.isArray(updatedData.files)
+          ? updatedData.files.map(f => ({
+              url: f.url,
+              name: f.name
+            }))
+          : []
+      };
       localStorage.setItem(SHARED_KEY, JSON.stringify(allLeads));
     }
     setEditingLead(null);
@@ -110,7 +127,6 @@ export default function MyLeads() {
             </div>
           </div>
         )}
-        {/* EDIT MODAL */}
         <AddLeadModal
           isOpen={showEditModal}
           initialData={editingLead}

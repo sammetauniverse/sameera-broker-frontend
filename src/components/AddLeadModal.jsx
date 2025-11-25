@@ -1,19 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Upload, FileText } from 'lucide-react';
-
-// Handles ANY file type & limits file size for browser safety
-function getFileObj(file) {
-  const maxSizeMB = 5;
-  return new Promise((resolve) => {
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      alert(`File "${file.name}" is too large (${(file.size/1024/1024).toFixed(1)}MB). Limit: ${maxSizeMB}MB`);
-      return resolve(null);
-    }
-    const reader = new FileReader();
-    reader.onload = e => resolve({ name: file.name, url: e.target.result });
-    reader.readAsDataURL(file);
-  });
-}
+import { uploadFileToDrive, makeFilePublic, getDriveDownloadUrl } from '../utils/googleDrive';
 
 export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
   const [formData, setFormData] = useState({
@@ -24,6 +11,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
     comments: ''
   });
   const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -34,10 +22,23 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
 
   if (!isOpen) return null;
 
-  // Accept all files, skip nulls (oversize)
+  // Handles file upload to Google Drive and stores only {url, name}
   const handleFileChange = async (e) => {
-    const fileObjs = (await Promise.all(Array.from(e.target.files).map(getFileObj))).filter(Boolean);
-    setFiles(prev => Array.isArray(prev) ? [...prev, ...fileObjs] : [...fileObjs]);
+    const filesArr = Array.from(e.target.files);
+    setLoading(true);
+    const uploadedFiles = [];
+    for (const file of filesArr) {
+      try {
+        const id = await uploadFileToDrive(file);
+        await makeFilePublic(id);
+        const url = getDriveDownloadUrl(id);
+        uploadedFiles.push({ url, name: file.name });
+      } catch (err) {
+        alert(`Upload failed for ${file.name}`);
+      }
+    }
+    setFiles(prev => [...prev, ...uploadedFiles]);
+    setLoading(false);
   };
 
   const handleSubmit = (e) => {
@@ -49,8 +50,8 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
     onSave({
       ...formData,
       converted: formData.isConverted || formData.converted,
-      files: Array.isArray(files) ? files : [],
-      hasFiles: Array.isArray(files) && files.length > 0
+      files,
+      hasFiles: files.length > 0
     });
     setFiles([]);
     setFormData({
@@ -87,29 +88,22 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
           <textarea placeholder="Site Visit Comments" value={formData.comments || ''} onChange={e => setFormData({ ...formData, comments: e.target.value })} className="w-full p-2.5 border rounded-lg" />
           <label className="border-2 border-dashed border-gray-300 rounded-xl p-6 block text-center cursor-pointer">
             <Upload className="text-gray-400 mx-auto" />
-            <span className="block mt-2 text-sm text-indigo-600">Click to upload any file (max 5MB each)</span>
+            <span className="block mt-2 text-sm text-indigo-600">Click to upload any file</span>
             <input type="file" multiple className="hidden" onChange={handleFileChange} />
           </label>
+          {loading && <div className="text-indigo-600">Uploading files...</div>}
           {Array.isArray(files) && files.length > 0 &&
             <div className="mt-2 flex flex-wrap gap-2">
-              {files.map((f, i) => {
-                const isImage = f.url && f.url.startsWith("data:image");
-                const isVideo = f.url && f.url.startsWith("data:video");
-                if (isImage) {
-                  return <img key={i} src={f.url} alt={f.name} className="w-16 h-16 rounded shadow-md object-cover" />;
-                }
-                if (isVideo) {
-                  return (
-                    <video key={i} controls className="w-20 h-16 bg-black rounded">
-                      <source src={f.url} type="video/mp4" />
-                    </video>
-                  );
-                }
-                return <span key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded border border-gray-200 text-xs"><FileText size={16} />{f.name}</span>;
-              })}
+              {files.map((f, i) => (
+                <span key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded border border-gray-200 text-xs">
+                  <FileText size={16} />{f.name}
+                </span>
+              ))}
             </div>
           }
-          <button className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg" type="submit">{initialData ? "Update Lead" : "Upload Lead"}</button>
+          <button className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg" type="submit" disabled={loading}>
+            {initialData ? "Update Lead" : "Upload Lead"}
+          </button>
         </form>
       </div>
     </div>
