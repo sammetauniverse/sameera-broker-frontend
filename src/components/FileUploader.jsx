@@ -17,7 +17,13 @@ export default function FileUploader() {
     if (!file) return;
     setFileName(file.name);
     setStatus("Uploading...");
+
     try {
+      // Ensure Google Drive authentication happens ONLY here, if needed
+      const auth2 = window.gapi.auth2.getAuthInstance();
+      if (auth2 && !auth2.isSignedIn.get()) {
+        await auth2.signIn(); // Only triggers Google popup if not already authed
+      }
       // Upload file to Google Drive
       const id = await uploadFileToDrive(file);
       // Make the file public for download/sharing
@@ -25,7 +31,7 @@ export default function FileUploader() {
       setFileId(id);
       setStatus("Uploaded & Public!");
     } catch (err) {
-      setStatus("Error uploading. Check Google Sign-In.");
+      setStatus("Error uploading. Allow Google Drive access.");
       setFileId(null);
     }
   }
