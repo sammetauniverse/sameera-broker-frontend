@@ -7,12 +7,13 @@ import Profile from './pages/Profile';
 import MyLeads from './pages/MyLeads';
 
 import useGoogleDrive from './hooks/useGoogleDrive';
+
 // Optional: Place, customize, or theme this as your global layout/header
 function AppHeader() {
   return (
     <header>
       <h1>Google Drive File Uploader Demo</h1>
-      <GoogleAuthButtons />
+      {/* REMOVED <GoogleAuthButtons /> */}
     </header>
   );
 }
@@ -28,7 +29,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <AppHeader /> {/* Show header and GoogleAuth globally (or move to NavBar/Sidebar) */}
+      <AppHeader /> {/* No GoogleAuthButtons now */}
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
