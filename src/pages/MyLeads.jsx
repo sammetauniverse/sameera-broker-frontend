@@ -41,7 +41,7 @@ export default function MyLeads() {
   }, [fetchLeads]);
 
   const handleSave = async (formData) => {
-    console.log("Attempting to save:", formData); 
+    console.log("Attempting to save:", formData);
     
     const url = editingLead ? `${API_BASE_URL}${editingLead.id}/` : API_BASE_URL;
     const method = editingLead ? 'PUT' : 'POST';
@@ -53,19 +53,30 @@ export default function MyLeads() {
         body: JSON.stringify(formData)
       });
 
-      if (res.ok) {
-        console.log("Save successful");
-        await fetchLeads();
-        setShowModal(false);
-        setEditingLead(null);
+      // SAFELY HANDLE RESPONSE TO PREVENT CRASHES
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        const data = await res.json();
+        
+        if (res.ok) {
+          await fetchLeads();
+          setShowModal(false);
+          setEditingLead(null);
+          alert("Lead Saved Successfully!");
+        } else {
+          console.error("Server API Error:", data);
+          alert(`Server Error: ${JSON.stringify(data)}`);
+        }
       } else {
-        const err = await res.json();
-        console.error("Server Error:", err);
-        alert("Server Error: " + JSON.stringify(err));
+        // Handle non-JSON response (like 500 HTML pages)
+        const text = await res.text();
+        console.error("Non-JSON Response:", text);
+        alert("Critical Server Error: The backend returned an HTML error page. Check Render logs.");
       }
+
     } catch (err) {
-      console.error("Network Error:", err);
-      alert("Network Error. Check console.");
+      console.error("Network Crash:", err);
+      alert("Network Error. Check your internet connection.");
     }
   };
 
