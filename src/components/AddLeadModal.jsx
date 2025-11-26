@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Upload, FileText } from 'lucide-react';
-import { uploadFileToDrive, makeFilePublic, getDriveDownloadUrl } from '../utils/googleDrive';
+import { uploadFileToFirebase } from '../utils/uploadToFirebase';
 
 export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
   const [formData, setFormData] = useState({
@@ -22,21 +22,25 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
 
   if (!isOpen) return null;
 
-  // Handles file upload to Google Drive and stores only {url, name}
+  // Updated: Handles file upload to Firebase Storage
   const handleFileChange = async (e) => {
     const filesArr = Array.from(e.target.files);
+    if (filesArr.length === 0) return;
+
     setLoading(true);
     const uploadedFiles = [];
+
     for (const file of filesArr) {
       try {
-        const id = await uploadFileToDrive(file);
-        await makeFilePublic(id);
-        const url = getDriveDownloadUrl(id);
+        // Use the new Firebase function
+        const url = await uploadFileToFirebase(file);
         uploadedFiles.push({ url, name: file.name });
       } catch (err) {
+        console.error(err);
         alert(`Upload failed for ${file.name}`);
       }
     }
+
     setFiles(prev => [...prev, ...uploadedFiles]);
     setLoading(false);
   };
@@ -53,12 +57,16 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
       files,
       hasFiles: files.length > 0
     });
-    setFiles([]);
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      name: '', phone: '', address: '', googlePin: '',
-      acres: '', price: '', siteVisitDone: false, isConverted: false, converted: false, comments: ''
-    });
+    
+    // Clear form only if it's a new entry (not edit)
+    if (!initialData) {
+      setFiles([]);
+      setFormData({
+        date: new Date().toISOString().split('T')[0],
+        name: '', phone: '', address: '', googlePin: '',
+        acres: '', price: '', siteVisitDone: false, isConverted: false, converted: false, comments: ''
+      });
+    }
     onClose();
   };
 
@@ -86,23 +94,28 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
             Converted?
           </label>
           <textarea placeholder="Site Visit Comments" value={formData.comments || ''} onChange={e => setFormData({ ...formData, comments: e.target.value })} className="w-full p-2.5 border rounded-lg" />
-          <label className="border-2 border-dashed border-gray-300 rounded-xl p-6 block text-center cursor-pointer">
+          
+          <label className="border-2 border-dashed border-gray-300 rounded-xl p-6 block text-center cursor-pointer hover:bg-gray-50 transition-colors">
             <Upload className="text-gray-400 mx-auto" />
-            <span className="block mt-2 text-sm text-indigo-600">Click to upload any file</span>
+            <span className="block mt-2 text-sm text-indigo-600 font-medium">Click to upload files to Firebase</span>
             <input type="file" multiple className="hidden" onChange={handleFileChange} />
           </label>
-          {loading && <div className="text-indigo-600">Uploading files...</div>}
+          
+          {loading && <div className="text-indigo-600 font-medium animate-pulse">Uploading files to Firebase...</div>}
+          
           {Array.isArray(files) && files.length > 0 &&
             <div className="mt-2 flex flex-wrap gap-2">
               {files.map((f, i) => (
-                <span key={i} className="flex items-center gap-2 px-2 py-1 bg-gray-100 rounded border border-gray-200 text-xs">
-                  <FileText size={16} />{f.name}
+                <span key={i} className="flex items-center gap-2 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full border border-indigo-100 text-xs font-medium">
+                  <FileText size={14} /> 
+                  <a href={f.url} target="_blank" rel="noreferrer" className="hover:underline truncate max-w-[150px]">{f.name}</a>
                 </span>
               ))}
             </div>
           }
-          <button className="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-lg" type="submit" disabled={loading}>
-            {initialData ? "Update Lead" : "Upload Lead"}
+          
+          <button className="mt-4 w-full px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold transition-all disabled:opacity-50" type="submit" disabled={loading}>
+            {loading ? "Please wait..." : (initialData ? "Update Lead" : "Upload Lead")}
           </button>
         </form>
       </div>
