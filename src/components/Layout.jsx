@@ -20,6 +20,14 @@ export default function Layout({ children }) {
     localStorage.clear(); // Clear ALL storage (token + user)
     navigate('/');
   };
+    const menuItems = [
+    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/leads' },
+    { name: 'My Leads', icon: <List size={20} />, path: '/my-leads' },
+    // DELETE THIS LINE BELOW:
+    // { name: 'Add New Lead', icon: <PlusCircle size={20} />, path: '/my-leads' }, 
+    { name: 'Profile', icon: <User size={20} />, path: '/profile' }
+  ];
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex">

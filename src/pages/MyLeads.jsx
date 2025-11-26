@@ -3,6 +3,8 @@ import { Plus, Search, MapPin, Phone, Calendar } from 'lucide-react';
 import AddLeadModal from '../components/AddLeadModal';
 
 export default function MyLeads() {
+  console.log("🚀 DEBUG: RUNNING NEW VERSION 5.0 - NO TOASTS"); // <--- ADD THIS
+  // ... rest of code ...
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
