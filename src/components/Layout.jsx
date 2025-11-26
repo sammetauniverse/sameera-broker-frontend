@@ -1,81 +1,60 @@
-import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, PlusCircle, User, LogOut, List } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, List, User, LogOut } from 'lucide-react';
 
 export default function Layout({ children }) {
-  const navigate = useNavigate();
   const location = useLocation();
-  const currentUser = localStorage.getItem('currentUser') || 'User';
-
-  // We removed the modal state from here to avoid complexity
-  const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/leads' },
-    { name: 'My Leads', icon: <List size={20} />, path: '/my-leads' },
-    // Redirect "Add New Lead" to My Leads page instead of opening a broken modal
-    { name: 'Add New Lead', icon: <PlusCircle size={20} />, path: '/my-leads' }, 
-    { name: 'Profile', icon: <User size={20} />, path: '/profile' }
-  ];
+  const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.clear(); // Clear ALL storage (token + user)
+    localStorage.clear();
     navigate('/');
   };
-    const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/leads' },
+
+  // Corrected menuItems (Defined only ONCE)
+  const menuItems = [
+    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
     { name: 'My Leads', icon: <List size={20} />, path: '/my-leads' },
-    // DELETE THIS LINE BELOW:
-    // { name: 'Add New Lead', icon: <PlusCircle size={20} />, path: '/my-leads' }, 
     { name: 'Profile', icon: <User size={20} />, path: '/profile' }
   ];
 
-
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col fixed h-full z-10">
-        <div className="p-6 border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-indigo-700">Sameera</h1>
+      <div className="w-64 bg-white shadow-lg fixed h-full hidden md:block">
+        <div className="p-6 border-b">
+          <h1 className="text-2xl font-bold text-indigo-600">Sameera</h1>
         </div>
-        
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="mt-6 px-4 space-y-2">
           {menuItems.map((item) => (
-            <button
+            <Link
               key={item.name}
-              onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                location.pathname === item.path 
-                  ? 'bg-indigo-600 text-white shadow-md' 
+              to={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                location.pathname === item.path
+                  ? 'bg-indigo-50 text-indigo-600 font-medium'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >
               {item.icon}
               {item.name}
-            </button>
+            </Link>
           ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-100">
-          <div className="flex items-center gap-3 px-4 py-3 mb-2">
-            <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs">
-              {currentUser.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-medium text-gray-900 truncate">{currentUser}</p>
-              <p className="text-xs text-gray-500">Broker</p>
-            </div>
-          </div>
-          <button 
+          
+          <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg mt-8 transition-colors"
           >
-            <LogOut size={16} /> Logout
+            <LogOut size={20} />
+            Logout
           </button>
-        </div>
+        </nav>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 ml-64 p-8">
-        {children}
+      <div className="flex-1 md:ml-64">
+        <div className="p-8">
+          {children}
+        </div>
       </div>
     </div>
   );
