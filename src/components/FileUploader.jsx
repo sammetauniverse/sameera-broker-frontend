@@ -1,58 +1,41 @@
-import React, { useState } from "react";
-import {
-  uploadFileToDrive,
-  makeFilePublic,
-  getDriveDownloadUrl,
-  getDriveViewUrl
-} from "../utils/googleDrive"; // adjust the path if needed
+import { useState } from 'react';
+import { uploadFileToFirebase } from '../utils/uploadToFirebase';
 
-export default function FileUploader() {
-  const [fileId, setFileId] = useState(null);
-  const [status, setStatus] = useState("");
-  const [fileName, setFileName] = useState("");
+export default function FileUploader({ onUploadSuccess }) {
+  const [uploading, setUploading] = useState(false);
 
-  // Handles file input and upload process
-  async function handleFileChange(e) {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setFileName(file.name);
-    setStatus("Uploading...");
 
+    setUploading(true);
     try {
-      // Ensure Google Drive authentication happens ONLY here, if needed
-      const auth2 = window.gapi.auth2.getAuthInstance();
-      if (auth2 && !auth2.isSignedIn.get()) {
-        await auth2.signIn(); // Only triggers Google popup if not already authed
+      // Use the new Firebase function
+      const downloadURL = await uploadFileToFirebase(file);
+      
+      // Pass the URL back to the parent component (e.g., MyLeads form)
+      if (onUploadSuccess) {
+        onUploadSuccess(downloadURL);
       }
-      // Upload file to Google Drive
-      const id = await uploadFileToDrive(file);
-      // Make the file public for download/sharing
-      await makeFilePublic(id);
-      setFileId(id);
-      setStatus("Uploaded & Public!");
-    } catch (err) {
-      setStatus("Error uploading. Allow Google Drive access.");
-      setFileId(null);
+      
+      alert("File uploaded successfully!");
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Upload failed. Check console.");
+    } finally {
+      setUploading(false);
     }
-  }
+  };
 
   return (
-    <div style={{ border: "1px solid #eee", padding: "20px", maxWidth: "400px", margin: "24px auto", borderRadius: "8px" }}>
-      <h3>Upload to Google Drive</h3>
-      <input type="file" onChange={handleFileChange} />
-      <div style={{ marginTop: "10px", color: "#666" }}>{status}</div>
-      {fileId && (
-        <div style={{ marginTop: "12px" }}>
-          <strong>{fileName}</strong><br />
-          <a href={getDriveDownloadUrl(fileId)} target="_blank" rel="noopener noreferrer">
-            Download File
-          </a>
-          {" | "}
-          <a href={getDriveViewUrl(fileId)} target="_blank" rel="noopener noreferrer">
-            View on Drive
-          </a>
-        </div>
-      )}
+    <div className="file-uploader">
+      <input 
+        type="file" 
+        onChange={handleFileChange} 
+        disabled={uploading}
+        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+      />
+      {uploading && <p className="text-sm text-blue-600 mt-2">Uploading to Firebase...</p>}
     </div>
   );
 }
