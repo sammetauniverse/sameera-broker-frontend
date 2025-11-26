@@ -1,9 +1,9 @@
+// Forced Update v3
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddLeadModal from '../components/AddLeadModal';
 import { MapPin, FileText, Image as ImageIcon, Edit as EditIcon, Loader } from 'lucide-react';
 
-// Use environment variable or fallback to your render URL
 const API_BASE_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com/api/leads/";
 
 export default function MyLeads() {
@@ -13,16 +13,14 @@ export default function MyLeads() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
 
-  // Helper to get the JWT token
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token'); // Ensure you save token here on login
+    const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     };
   };
 
-  // 1. Fetch Leads from API
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -31,6 +29,12 @@ export default function MyLeads() {
     setLoading(true);
     try {
       const res = await fetch(API_BASE_URL, { headers: getAuthHeaders() });
+      if (res.status === 401) {
+        // Token is invalid, log out
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setLeads(data);
@@ -44,13 +48,11 @@ export default function MyLeads() {
     }
   };
 
-  // 2. Create or Update Lead via API
   const handleSaveLead = async (leadData) => {
     const isEdit = !!editingLead;
     const url = isEdit ? `${API_BASE_URL}${editingLead.id}/` : API_BASE_URL;
     const method = isEdit ? 'PUT' : 'POST';
 
-    // Transform frontend data format to backend model format if needed
     const payload = {
       name: leadData.name,
       phone_number: leadData.phone,
@@ -61,7 +63,7 @@ export default function MyLeads() {
       site_visit_done: leadData.siteVisitDone,
       is_converted: leadData.isConverted,
       comments: leadData.comments,
-      file_urls: leadData.files // Ensure backend expects a JSON list
+      file_urls: leadData.files
     };
 
     try {
@@ -72,7 +74,7 @@ export default function MyLeads() {
       });
 
       if (res.ok) {
-        await fetchLeads(); // Refresh list
+        await fetchLeads();
         setShowEditModal(false);
         setEditingLead(null);
       } else {
@@ -139,7 +141,6 @@ export default function MyLeads() {
           </div>
         )}
 
-        {/* File Viewer Modal */}
         {viewingFiles && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="bg-white p-6 rounded-xl max-w-lg w-full">
@@ -158,9 +159,10 @@ export default function MyLeads() {
           isOpen={showEditModal}
           initialData={editingLead}
           onClose={() => setShowEditModal(false)}
-          onSave={handleSaveLead}
+          onLeadSave={handleSaveLead} {/* <-- RENAMED PROP */}
         />
       </div>
     </Layout>
   );
 }
+
