@@ -1,4 +1,4 @@
-// Forced Update v3
+// Forced Update v4 - Fixed Syntax
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import AddLeadModal from '../components/AddLeadModal';
@@ -30,7 +30,6 @@ export default function MyLeads() {
     try {
       const res = await fetch(API_BASE_URL, { headers: getAuthHeaders() });
       if (res.status === 401) {
-        // Token is invalid, log out
         localStorage.clear();
         window.location.href = '/';
         return;
@@ -159,10 +158,9 @@ export default function MyLeads() {
           isOpen={showEditModal}
           initialData={editingLead}
           onClose={() => setShowEditModal(false)}
-          onLeadSave={handleSaveLead} {/* <-- RENAMED PROP */}
+          onLeadSave={handleSaveLead}
         />
       </div>
     </Layout>
   );
 }
-
