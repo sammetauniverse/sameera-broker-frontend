@@ -1,55 +1,134 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { UserPlus, Loader } from 'lucide-react';
 
 export default function Register() {
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username: '', email: '', password: '', confirmPass: '' });
 
-  const handleRegister = (e) => {
+  const BACKEND_URL = "https://sameera-broker-backend.onrender.com";
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPass) {
-      alert("Passwords do not match!");
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match!");
       return;
     }
 
-    // 1. Save Credentials to LocalStorage (Mini Database)
-    const newUser = { username: formData.username, password: formData.password };
-    localStorage.setItem('registeredUser', JSON.stringify(newUser));
+    setLoading(true);
 
-    // 2. Create a default profile for this user
-    const defaultProfile = {
-      name: formData.username,
-      phone: '+91 00000 00000',
-      avatar: null // No photo yet
-    };
-    localStorage.setItem('userProfile', JSON.stringify(defaultProfile));
+    try {
+      // CALL THE REAL BACKEND
+      const response = await fetch(`${BACKEND_URL}/api/users/register/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        })
+      });
 
-    alert("Registration Successful! You can now login.");
-    navigate('/');
+      if (!response.ok) {
+        const data = await response.json();
+        // Handle duplicate username error
+        if (data.username) throw new Error("Username already exists.");
+        throw new Error("Registration failed. Please try again.");
+      }
+
+      // Success
+      alert("Account Created! Please Login.");
+      navigate('/'); // Redirect to Login
+
+    } catch (err) {
+      console.error("Registration Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-600 p-4">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-500 mt-2">Join Sameera Broker Portal</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Create Account</h1>
+          <p className="text-gray-500">Join Sameera Broker Portal</p>
         </div>
-        
-        <form onSubmit={handleRegister} className="space-y-4">
-          <input required placeholder="Username" className="w-full p-3 border rounded-lg" onChange={e => setFormData({...formData, username: e.target.value})} />
-          <input required type="email" placeholder="Email Address" className="w-full p-3 border rounded-lg" onChange={e => setFormData({...formData, email: e.target.value})} />
-          <input required type="password" placeholder="Password" className="w-full p-3 border rounded-lg" onChange={e => setFormData({...formData, password: e.target.value})} />
-          <input required type="password" placeholder="Confirm Password" className="w-full p-3 border rounded-lg" onChange={e => setFormData({...formData, confirmPass: e.target.value})} />
+
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
+            />
+          </div>
           
-          <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors">
-            Register
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <input
+              type="password"
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg flex justify-center gap-2 mt-4"
+          >
+            {loading ? <Loader className="animate-spin" /> : <><UserPlus size={20}/> Register</>}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-gray-500">
           Already have an account? 
-          <Link to="/" className="text-indigo-600 font-bold hover:underline ml-1">Login here</Link>
+          <Link to="/" className="text-indigo-600 font-bold hover:underline ml-1">
+            Login here
+          </Link>
         </div>
       </div>
     </div>
