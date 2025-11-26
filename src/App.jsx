@@ -6,14 +6,11 @@ import Inventory from './pages/Inventory';
 import Profile from './pages/Profile';
 import MyLeads from './pages/MyLeads';
 
-import useGoogleDrive from './hooks/useGoogleDrive';
-
-// Optional: Place, customize, or theme this as your global layout/header
+// Updated Header Text
 function AppHeader() {
   return (
     <header>
-      <h1>Google Drive File Uploader Demo</h1>
-      {/* REMOVED <GoogleAuthButtons /> */}
+      <h1>Sameera Broker Portal</h1> 
     </header>
   );
 }
@@ -25,14 +22,14 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  useGoogleDrive(); // Load Google Drive API once, globally.
-
   return (
     <BrowserRouter>
-      <AppHeader /> {/* No GoogleAuthButtons now */}
+      <AppHeader />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        
+        {/* Protected Routes */}
         <Route path="/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
         <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
