@@ -8,6 +8,7 @@ export default function MyLeads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Ensure this matches your actual backend URL
   const BACKEND_URL = "https://sameera-broker-backend.onrender.com";
 
   // Fetch Leads safely
@@ -32,7 +33,12 @@ export default function MyLeads() {
 
       if (response.ok) {
         const data = await response.json();
-        setLeads(data);
+        // Ensure data is an array before setting
+        if (Array.isArray(data)) {
+          setLeads(data);
+        } else {
+          setLeads([]);
+        }
       }
     } catch (error) {
       console.error("Error fetching leads:", error);
@@ -41,11 +47,12 @@ export default function MyLeads() {
     }
   };
 
+  // Initial load
   useEffect(() => {
     fetchLeads();
   }, []);
 
-  // Save Lead safely
+  // Save Lead safely (No crash on success)
   const handleSaveLead = async (leadData) => {
     const token = localStorage.getItem('token');
     try {
@@ -63,10 +70,10 @@ export default function MyLeads() {
         throw new Error(errorData.detail || "Failed to save lead");
       }
 
-      // Success!
+      // --- Success Handling ---
       alert("Lead Saved Successfully!"); 
       setIsModalOpen(false);
-      fetchLeads(); // Refresh list
+      fetchLeads(); // Refresh list immediately
 
     } catch (error) {
       console.error("Save failed:", error);
