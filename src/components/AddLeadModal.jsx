@@ -51,12 +51,20 @@ export default function AddLeadModal({ isOpen, onClose, onSave, initialData }) {
       alert("Fill all required fields: Name, Address, Google Pin, Acres, Price.");
       return;
     }
-    onSave({
-      ...formData,
-      converted: formData.isConverted || formData.converted,
-      files,
-      hasFiles: files.length > 0
-    });
+
+    // SAFETY CHECK: Ensure onSave is actually a function before calling it
+    if (typeof onSave === 'function') {
+      onSave({
+        ...formData,
+        converted: formData.isConverted || formData.converted,
+        files,
+        hasFiles: files.length > 0
+      });
+    } else {
+      console.error("CRITICAL ERROR: onSave prop is missing or not a function in AddLeadModal");
+      alert("System Error: Cannot save lead. Please contact support.");
+      return;
+    }
     
     // Clear form only if it's a new entry (not edit)
     if (!initialData) {
