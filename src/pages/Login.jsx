@@ -1,86 +1,108 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { LogIn, Loader } from 'lucide-react';
 
 export default function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-   const handleLogin = (e) => {
+  // Ensure this matches your backend URL
+  const BACKEND_URL = "https://sameera-broker-backend.onrender.com";
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // 1. Get registered user from storage
-    const storedUser = JSON.parse(localStorage.getItem('registeredUser'));
+    setLoading(true);
+    setError('');
 
-    // 2. Check credentials
-    const isAdmin = username === 'admin' && password === 'admin';
-    const isUser = storedUser && username === storedUser.username && password === storedUser.password;
+    try {
+      // 1. Call the Standard Login Endpoint
+      const response = await fetch(`${BACKEND_URL}/api/token/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
 
-    if (isAdmin || isUser) {
-      console.log("Login successful");
-      localStorage.setItem('token', 'demo-token-secure');
-      
-      // --- NEW: Save current username so we know whose data to load ---
-      localStorage.setItem('currentUser', username); 
+      const data = await response.json();
 
-      // If it's admin, ensure a default profile exists
-      if (isAdmin && !localStorage.getItem('userProfile_admin')) {
-        localStorage.setItem('userProfile_admin', JSON.stringify({ name: 'Administrator', avatar: null }));
+      if (!response.ok) {
+        throw new Error(data.detail || "Invalid credentials");
       }
 
-      setTimeout(() => navigate('/leads'), 100);
-    } else {
-      setError('Invalid credentials.');
+      // 2. Save the REAL Access Token (Not "demo-token")
+      if (data.access) {
+        localStorage.setItem('token', data.access);
+        // Optional: Save refresh token if you need it later
+        localStorage.setItem('refresh_token', data.refresh);
+        
+        // 3. Go to Leads
+        navigate('/my-leads');
+      } else {
+        throw new Error("Server sent invalid response");
+      }
+
+    } catch (err) {
+      console.error("Login Error:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sameera Broker Portal</h1>
-          <p className="text-gray-600">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+          <p className="text-gray-500">Sign in to manage your leads</p>
         </div>
-        
-        <form onSubmit={handleLogin} className="space-y-6">
+
+        {error && (
+          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-            <input 
-              type="text" 
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+            <input
+              type="text"
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
               placeholder="Enter username"
+              value={formData.username}
+              onChange={(e) => setFormData({...formData, username: e.target.value})}
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-            <input 
-              type="password" 
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
+              placeholder="••••••••"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
             />
           </div>
-          
-          {error && (
-            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm font-bold">
-              {error}
-            </div>
-          )}
-          
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors">
-            Sign In
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg transform transition active:scale-95 flex justify-center gap-2"
+          >
+            {loading ? <Loader className="animate-spin" /> : <><LogIn size={20}/> Sign In</>}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-gray-500">
           Don't have an account? 
-          <Link to="/register" className="text-indigo-600 font-bold hover:underline ml-1">Register here</Link>
+          <Link to="/register" className="text-indigo-600 font-bold hover:underline ml-1">
+            Register here
+          </Link>
         </div>
       </div>
     </div>
