@@ -1,29 +1,34 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MapPin, Phone, Calendar } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Calendar, FileText, ExternalLink } from 'lucide-react';
 import AddLeadModal from '../components/AddLeadModal';
 
 export default function MyLeads() {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // FORCE REFRESH URL
-  const BACKEND_URL = "https://sameera-broker-backend.onrender.com";
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const fetchLeads = async () => {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) { window.location.href = '/'; return; }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/api/leads/`, {
+      const response = await fetch(`${API_URL}/api/leads/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+
+      if (response.status === 401) { localStorage.clear(); window.location.href = '/'; return; }
+
       if (response.ok) {
         const data = await response.json();
-        setLeads(Array.isArray(data) ? data : []);
+        // Handle pagination (Django DRF returns results array)
+        const results = Array.isArray(data) ? data : (data.results || []);
+        setLeads(results);
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Error fetching leads:", error);
     } finally {
       setLoading(false);
     }
@@ -31,13 +36,10 @@ export default function MyLeads() {
 
   useEffect(() => { fetchLeads(); }, []);
 
-  // --- SIMPLIFIED SAVE FUNCTION ---
   const handleSaveLead = async (leadData) => {
-    console.log("Attempting to save:", leadData);
     const token = localStorage.getItem('token');
-    
     try {
-      const response = await fetch(`${BACKEND_URL}/api/leads/`, {
+      const response = await fetch(`${API_URL}/api/leads/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,51 +49,67 @@ export default function MyLeads() {
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        alert("Server Error: " + (err.detail || "Failed"));
-        return;
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || "Failed to save lead");
       }
 
-      // Success path
-      alert("Saved Successfully!");
+      alert("Lead Saved Successfully!");
       setIsModalOpen(false);
-      fetchLeads();
+      fetchLeads(); // Refresh list
 
-    } catch (e) {
-      alert("Network Error: " + e.message);
+    } catch (error) {
+      alert("Error: " + error.message);
     }
   };
 
+  const filteredLeads = leads.filter(lead => 
+    lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.phone_number?.includes(searchTerm)
+  );
+
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">My Leads</h1>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded flex items-center gap-2"
-        >
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">My Leads</h1>
+        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex gap-2 hover:bg-indigo-700">
           <Plus size={20} /> Add New Lead
         </button>
       </div>
 
-      {/* Leads List */}
-      <div className="grid gap-4">
-        {leads.map(lead => (
-          <div key={lead.id} className="p-4 bg-white shadow rounded border">
-            <h3 className="font-bold">{lead.name}</h3>
-            <p className="text-gray-600">{lead.phone_number}</p>
-          </div>
-        ))}
+      {/* Search */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input type="text" placeholder="Search leads..." className="w-full pl-10 pr-4 py-2 border rounded-lg"
+            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
       </div>
 
-      {/* Modal Call */}
-      {isModalOpen && (
-        <AddLeadModal 
-          isOpen={true}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleSaveLead}
-        />
-      )}
+      {/* List */}
+      {loading ? <div className="text-center py-10">Loading...</div> : 
+       filteredLeads.length === 0 ? <div className="text-center py-10 bg-white rounded-xl">No leads found.</div> : 
+       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredLeads.map((lead) => (
+            <div key={lead.id} className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-md">
+              <div className="flex justify-between mb-4">
+                <h3 className="font-bold text-gray-800">{lead.name}</h3>
+                <span className="text-indigo-600 font-bold">{lead.status?.toUpperCase()}</span>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2"><Phone size={16}/> {lead.phone_number}</div>
+                {lead.preferred_location && <div className="flex items-center gap-2"><MapPin size={16}/> {lead.preferred_location}</div>}
+                {lead.file_url && (
+                   <a href={lead.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 hover:underline mt-2 pt-2 border-t">
+                     <FileText size={14}/> View Document <ExternalLink size={12}/>
+                   </a>
+                )}
+              </div>
+            </div>
+          ))}
+       </div>
+      }
+
+      <AddLeadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveLead} />
     </div>
   );
 }

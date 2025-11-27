@@ -1,26 +1,18 @@
-import { storage } from "../firebaseConfig";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage } from "./firebaseConfig";
 
-export async function uploadFileToFirebase(file) {
+export const uploadFile = async (file) => {
   if (!file) return null;
-
+  
+  // Create a unique file path: leads/timestamp_filename
+  const storageRef = ref(storage, `leads/${Date.now()}_${file.name}`);
+  
   try {
-    // Create a unique file path (e.g., uploads/1715623_image.jpg)
-    const fileName = `${Date.now()}_${file.name}`;
-    const storageRef = ref(storage, `uploads/${fileName}`);
-
-    console.log("Uploading to Firebase Storage...");
-    
-    // Upload the file
     const snapshot = await uploadBytes(storageRef, file);
-
-    // Get the public download URL
     const downloadURL = await getDownloadURL(snapshot.ref);
-    
-    console.log("File available at", downloadURL);
     return downloadURL;
   } catch (error) {
-    console.error("Error uploading to Firebase:", error);
+    console.error("Error uploading file:", error);
     throw error;
   }
-}
+};

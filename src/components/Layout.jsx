@@ -6,21 +6,22 @@ export default function Layout({ children }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate('/');
+    localStorage.clear(); // Clears token
+    navigate('/'); // Redirect to Login
   };
 
-  // Corrected menuItems (Defined only ONCE)
+  // Define menu items once to avoid build errors
   const menuItems = [
-    { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
     { name: 'My Leads', icon: <List size={20} />, path: '/my-leads' },
-    { name: 'Profile', icon: <User size={20} />, path: '/profile' }
+    { name: 'Profile', icon: <User size={20} />, path: '/profile' },
+    // Add Dashboard back if you have a Dashboard page ready
+    // { name: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/dashboard' }, 
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg fixed h-full hidden md:block">
+      <div className="w-64 bg-white shadow-lg fixed h-full hidden md:block z-10">
         <div className="p-6 border-b">
           <h1 className="text-2xl font-bold text-indigo-600">Sameera</h1>
         </div>
@@ -50,8 +51,8 @@ export default function Layout({ children }) {
         </nav>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 md:ml-64">
+      {/* Main Content Area */}
+      <div className="flex-1 md:ml-64 transition-all duration-300">
         <div className="p-8">
           {children}
         </div>

@@ -8,8 +8,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Ensure this matches your backend URL
-  const BACKEND_URL = "https://sameera-broker-backend.onrender.com";
+  const API_URL = import.meta.env.VITE_API_URL; // Using env var
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -17,8 +16,7 @@ export default function Login() {
     setError('');
 
     try {
-      // 1. Call the Standard Login Endpoint
-      const response = await fetch(`${BACKEND_URL}/api/token/`, {
+      const response = await fetch(`${API_URL}/api/token/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -26,24 +24,13 @@ export default function Login() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.detail || "Invalid credentials");
-      }
+      if (!response.ok) throw new Error(data.detail || "Invalid credentials");
 
-      // 2. Save the REAL Access Token (Not "demo-token")
       if (data.access) {
         localStorage.setItem('token', data.access);
-        // Optional: Save refresh token if you need it later
-        localStorage.setItem('refresh_token', data.refresh);
-        
-        // 3. Go to Leads
         navigate('/my-leads');
-      } else {
-        throw new Error("Server sent invalid response");
       }
-
     } catch (err) {
-      console.error("Login Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -53,56 +40,19 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
-          <p className="text-gray-500">Sign in to manage your leads</p>
-        </div>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm text-center border border-red-100">
-            {error}
-          </div>
-        )}
-
+        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Sign In</h1>
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input
-              type="text"
-              required
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              placeholder="Enter username"
-              value={formData.username}
-              onChange={(e) => setFormData({...formData, username: e.target.value})}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold shadow-lg transform transition active:scale-95 flex justify-center gap-2"
-          >
-            {loading ? <Loader className="animate-spin" /> : <><LogIn size={20}/> Sign In</>}
+          <input type="text" placeholder="Username" required className="w-full p-3 border rounded-xl"
+            onChange={(e) => setFormData({...formData, username: e.target.value})} />
+          <input type="password" placeholder="Password" required className="w-full p-3 border rounded-xl"
+            onChange={(e) => setFormData({...formData, password: e.target.value})} />
+          <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">
+            {loading ? <Loader className="animate-spin mx-auto" /> : "Sign In"}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          Don't have an account? 
-          <Link to="/register" className="text-indigo-600 font-bold hover:underline ml-1">
-            Register here
-          </Link>
+        <div className="mt-6 text-center">
+          <Link to="/register" className="text-indigo-600 font-bold hover:underline">Register here</Link>
         </div>
       </div>
     </div>
