@@ -1,10 +1,11 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "./firebaseConfig";
 
-export const uploadFile = async (file) => {
+// We rename this export to match what your FileUploader.jsx is looking for
+export const uploadFileToFirebase = async (file) => {
   if (!file) return null;
   
-  // Create a unique file path: leads/timestamp_filename
+  // Create a unique file path
   const storageRef = ref(storage, `leads/${Date.now()}_${file.name}`);
   
   try {
@@ -16,3 +17,6 @@ export const uploadFile = async (file) => {
     throw error;
   }
 };
+
+// Also export as 'uploadFile' just in case other new components use the shorter name
+export const uploadFile = uploadFileToFirebase;
