@@ -8,7 +8,7 @@ export default function MyLeads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const API_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com";
 
   const fetchLeads = async () => {
     const token = localStorage.getItem('token');
@@ -23,7 +23,6 @@ export default function MyLeads() {
 
       if (response.ok) {
         const data = await response.json();
-        // Handle pagination (Django DRF returns results array)
         const results = Array.isArray(data) ? data : (data.results || []);
         setLeads(results);
       }
@@ -50,18 +49,28 @@ export default function MyLeads() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || "Failed to save lead");
+        // Show the exact error from backend (e.g. "Invalid token" or "Missing field")
+        const msg = errorData.detail || errorData.file_url?.[0] || "Failed to save lead";
+        throw new Error(msg);
       }
 
-      alert("Lead Saved Successfully!");
+      alert("Lead Saved Successfully!"); 
       setIsModalOpen(false);
-      fetchLeads(); // Refresh list
+      fetchLeads();
 
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Save failed:", error);
+      if (error.message.includes("Given token not valid")) {
+         alert("Session expired. Please login again.");
+         localStorage.clear();
+         window.location.href = '/';
+      } else {
+         alert("Error: " + error.message);
+      }
     }
   };
 
+  // Filter Logic
   const filteredLeads = leads.filter(lead => 
     lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.phone_number?.includes(searchTerm)
@@ -76,7 +85,6 @@ export default function MyLeads() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="bg-white p-4 rounded-xl shadow-sm border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -85,7 +93,6 @@ export default function MyLeads() {
         </div>
       </div>
 
-      {/* List */}
       {loading ? <div className="text-center py-10">Loading...</div> : 
        filteredLeads.length === 0 ? <div className="text-center py-10 bg-white rounded-xl">No leads found.</div> : 
        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
