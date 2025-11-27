@@ -8,7 +8,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL; // Using env var
+  const API_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
