@@ -8,7 +8,8 @@ export default function Register() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  // Ensure this matches your Vercel Env Var or fallback correctly
+  const API_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,20 +17,29 @@ export default function Register() {
     setError('');
 
     try {
+      console.log("Registering to:", `${API_URL}/api/users/register/`);
+      
       const response = await fetch(`${API_URL}/api/users/register/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errData = await response.json().catch(()=>({}));
-        throw new Error(errData.username ? "Username already exists" : "Registration failed");
+        // Extract specific error message from Django
+        const msg = data.username ? `Username: ${data.username[0]}` : 
+                    data.email ? `Email: ${data.email[0]}` : 
+                    data.detail || "Registration failed";
+        throw new Error(msg);
       }
 
       alert("Account Created! Please Login.");
       navigate('/');
+
     } catch (err) {
+      console.error("Registration Error:", err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -40,7 +50,8 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-600 p-4">
       <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Register</h1>
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center">{error}</div>}
+        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center text-sm">{error}</div>}
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <input type="text" placeholder="Username" required className="w-full p-3 border rounded-xl"
             onChange={(e) => setFormData({...formData, username: e.target.value})} />
