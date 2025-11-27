@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://sameera-broker-backend.vercel.app/api/',
+  baseURL: 'https://sameera-broker-backend.onrender.com/api/',
 });
 
 api.interceptors.request.use((config) => {
