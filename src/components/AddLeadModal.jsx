@@ -10,7 +10,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
-    client_name: '',  // ✅ CHANGED FROM name TO client_name
+    client_name: '',
     phone_number: '',
     address: '',
     preferred_location: '',
@@ -48,9 +48,14 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     e.preventDefault();
     setLoading(true);
     try {
+      // ✅ EXPLICITLY BUILD PAYLOAD WITH ALL REQUIRED FIELDS
       const payload = {
-        ...formData,
+        client_name: formData.client_name,
+        phone_number: formData.phone_number,
+        address: formData.address || '',
+        preferred_location: formData.preferred_location || '',
         budget: formData.budget === '' ? null : formData.budget,
+        status: 'new',  // ✅ Always set status to 'new'
         file_url: formData.file_url || null
       };
 
@@ -81,7 +86,6 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
               <input required name="client_name" value={formData.client_name} onChange={handleChange}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="John Doe" />
-              {/* ✅ CHANGED name="name" TO name="client_name" */}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
