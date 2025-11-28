@@ -10,7 +10,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
   const [formData, setFormData] = useState({
-    name: '',
+    client_name: '',  // ✅ CHANGED FROM name TO client_name
     phone_number: '',
     address: '',
     preferred_location: '',
@@ -48,16 +48,13 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     e.preventDefault();
     setLoading(true);
     try {
-      // --- DATA CLEANING FIX ---
-      // Convert empty strings to null so the Backend doesn't crash
       const payload = {
         ...formData,
-        budget: formData.budget === '' ? null : formData.budget, // Fix for budget error
-        file_url: formData.file_url || null // Fix for empty URL error
+        budget: formData.budget === '' ? null : formData.budget,
+        file_url: formData.file_url || null
       };
 
       await onSave(payload);
-      // Note: The parent component handles closing the modal on success
     } catch (error) {
       console.error("Save error:", error);
     } finally {
@@ -82,8 +79,9 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-              <input required name="name" value={formData.name} onChange={handleChange}
+              <input required name="client_name" value={formData.client_name} onChange={handleChange}
                 className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="John Doe" />
+              {/* ✅ CHANGED name="name" TO name="client_name" */}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
