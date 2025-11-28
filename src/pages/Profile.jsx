@@ -1,3 +1,4 @@
+import api from '../api';
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Building2, Camera, Save, Edit2 } from 'lucide-react';
 
@@ -23,14 +24,8 @@ export default function Profile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch('https://sameera-broker-backend.onrender.com/api/auth/profile/', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setProfile(data);
-      }
+      const res = await api.get('/auth/profile/');
+      setProfile(res.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -46,22 +41,10 @@ export default function Profile() {
     e.preventDefault();
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch('https://sameera-broker-backend.onrender.com/api/auth/profile/', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(profile),
-      });
-      if (res.ok) {
-        alert('Profile updated');
-        setEditMode(false);
-        fetchProfile();
-      } else {
-        alert('Failed to update');
-      }
+      await api.put('/auth/profile/', profile);
+      alert('Profile updated');
+      setEditMode(false);
+      fetchProfile();
     } catch (e) {
       console.error(e);
       alert('Error updating');
