@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { X, Upload, Loader } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Upload } from 'lucide-react';
 
 export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -13,7 +13,6 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     comments: '',
     file_url: '',
   });
-  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -23,31 +22,35 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     }));
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('upload_preset', 'broker_docs'); // Configure in Cloudinary
-
-    try {
-      const response = await fetch(
-        'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/upload',
-        {
-          method: 'POST',
-          body: uploadFormData
+  // Cloudinary Upload Widget
+  const openCloudinaryWidget = () => {
+    // Create widget instance
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: 'dt38qbrni', // Your cloud name from previous uploads
+        uploadPreset: 'broker_docs', // Create this in Cloudinary dashboard
+        sources: ['local', 'camera'],
+        multiple: false,
+        maxFileSize: 10000000, // 10MB
+        resourceType: 'auto',
+        clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+        folder: 'broker_leads', // Organize uploads
+      },
+      (error, result) => {
+        if (error) {
+          console.error('Upload error:', error);
+          alert('File upload failed. Please try again.');
+          return;
         }
-      );
-      const data = await response.json();
-      setFormData(prev => ({ ...prev, file_url: data.secure_url }));
-    } catch (error) {
-      console.error('Upload error:', error);
-      alert('File upload failed');
-    } finally {
-      setUploading(false);
-    }
+
+        if (result.event === 'success') {
+          console.log('Upload success:', result.info);
+          setFormData(prev => ({ ...prev, file_url: result.info.secure_url }));
+        }
+      }
+    );
+
+    widget.open();
   };
 
   const handleSubmit = () => {
@@ -55,7 +58,11 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
       alert('Name and Phone are required!');
       return;
     }
+    
+    console.log("Submitting lead data:", formData); // Debug
     onSave(formData);
+    
+    // Reset form
     setFormData({
       name: '',
       phone_number: '',
@@ -198,28 +205,31 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
             </label>
           </div>
 
-          {/* File Upload */}
+          {/* File Upload using Cloudinary Widget */}
           <div className="border-2 border-dashed rounded-lg p-6 text-center">
             <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-            <p className="text-sm text-gray-600 mb-2">
-              {uploading ? 'Uploading...' : 'Click to Upload Document (PDF/Image)'}
+            <p className="text-sm text-gray-600 mb-3">
+              Click to Upload Document (PDF/Image)
             </p>
-            <input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="file-upload"
-              disabled={uploading}
-            />
-            <label
-              htmlFor="file-upload"
-              className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-100"
+            <button
+              type="button"
+              onClick={openCloudinaryWidget}
+              className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
             >
-              {uploading ? <Loader className="animate-spin" size={16} /> : 'Choose File'}
-            </label>
+              Choose File
+            </button>
             {formData.file_url && (
-              <p className="text-xs text-green-600 mt-2">✓ File uploaded successfully</p>
+              <div className="mt-3">
+                <p className="text-xs text-green-600">✓ File uploaded successfully</p>
+                <a 
+                  href={formData.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 hover:underline"
+                >
+                  View uploaded file
+                </a>
+              </div>
             )}
           </div>
         </div>
