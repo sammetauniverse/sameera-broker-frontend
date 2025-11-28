@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MapPin, Phone, Calendar, FileText, ExternalLink } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Home, FileText, ExternalLink, Trash2 } from 'lucide-react';
 import AddLeadModal from '../components/AddLeadModal';
 
 export default function MyLeads() {
@@ -68,7 +68,7 @@ export default function MyLeads() {
       // Refresh the leads list
       await fetchLeads();
       
-      // Trigger dashboard refresh by dispatching custom event
+      // Trigger dashboard refresh
       window.dispatchEvent(new Event('leadAdded'));
 
     } catch (error) {
@@ -80,6 +80,30 @@ export default function MyLeads() {
       } else {
          alert("Error: " + error.message);
       }
+    }
+  };
+
+  const handleDeleteLead = async (leadId, leadName) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete "${leadName}"?`);
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${API_URL}/api/leads/${leadId}/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert("Lead deleted successfully!");
+        await fetchLeads();
+        window.dispatchEvent(new Event('leadAdded')); // Refresh dashboard
+      } else {
+        throw new Error("Failed to delete lead");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Error deleting lead");
     }
   };
 
@@ -131,9 +155,19 @@ export default function MyLeads() {
           {filteredLeads.map((lead) => (
             <div 
               key={lead.id} 
-              className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-md transition-shadow"
+              className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-lg transition-shadow relative"
             >
-              <div className="flex justify-between items-start mb-4">
+              {/* Delete Button */}
+              <button
+                onClick={() => handleDeleteLead(lead.id, lead.name)}
+                className="absolute top-3 right-3 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="Delete Lead"
+              >
+                <Trash2 size={18} />
+              </button>
+
+              {/* Lead Header */}
+              <div className="flex justify-between items-start mb-4 pr-8">
                 <h3 className="font-bold text-gray-800 text-lg">{lead.name}</h3>
                 <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                   lead.status === 'new' ? 'bg-yellow-100 text-yellow-700' :
@@ -145,33 +179,46 @@ export default function MyLeads() {
                 </span>
               </div>
               
-              <div className="space-y-2 text-sm text-gray-600">
+              {/* Lead Details */}
+              <div className="space-y-3 text-sm text-gray-600">
+                {/* Phone */}
                 <div className="flex items-center gap-2">
-                  <Phone size={16} className="text-indigo-600" /> 
-                  <a href={`tel:${lead.phone_number}`} className="hover:text-indigo-600">
+                  <Phone size={16} className="text-indigo-600 flex-shrink-0" /> 
+                  <a href={`tel:${lead.phone_number}`} className="hover:text-indigo-600 font-medium">
                     {lead.phone_number}
                   </a>
                 </div>
-                
+
+                {/* Preferred Location */}
                 {lead.preferred_location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin size={16} className="text-indigo-600" /> 
-                    {lead.preferred_location}
+                  <div className="flex items-start gap-2">
+                    <MapPin size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
+                    <span className="line-clamp-2">{lead.preferred_location}</span>
+                  </div>
+                )}
+
+                {/* Address */}
+                {lead.address && (
+                  <div className="flex items-start gap-2">
+                    <Home size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
+                    <span className="line-clamp-2">{lead.address}</span>
                   </div>
                 )}
                 
+                {/* Budget */}
                 {lead.budget && (
-                  <div className="flex items-center gap-2 text-gray-700 font-semibold">
-                    Budget: ₹{lead.budget}
+                  <div className="text-gray-800 font-bold bg-indigo-50 px-3 py-2 rounded-lg">
+                    Budget: ₹{parseFloat(lead.budget).toLocaleString('en-IN')}
                   </div>
                 )}
                 
+                {/* Document */}
                 {lead.file_url && (
                   <a 
                     href={lead.file_url} 
                     target="_blank" 
                     rel="noopener noreferrer" 
-                    className="flex items-center gap-2 text-indigo-600 hover:underline mt-2 pt-2 border-t"
+                    className="flex items-center gap-2 text-indigo-600 hover:underline mt-3 pt-3 border-t font-medium"
                   >
                     <FileText size={14}/> View Document <ExternalLink size={12}/>
                   </a>
