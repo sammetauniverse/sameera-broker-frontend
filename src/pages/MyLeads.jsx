@@ -12,14 +12,21 @@ export default function MyLeads() {
 
   const fetchLeads = async () => {
     const token = localStorage.getItem('token');
-    if (!token) { window.location.href = '/'; return; }
+    if (!token) { 
+      window.location.href = '/'; 
+      return; 
+    }
 
     try {
       const response = await fetch(`${API_URL}/api/leads/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
-      if (response.status === 401) { localStorage.clear(); window.location.href = '/'; return; }
+      if (response.status === 401) { 
+        localStorage.clear(); 
+        window.location.href = '/'; 
+        return; 
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -33,7 +40,9 @@ export default function MyLeads() {
     }
   };
 
-  useEffect(() => { fetchLeads(); }, []);
+  useEffect(() => { 
+    fetchLeads(); 
+  }, []);
 
   const handleSaveLead = async (leadData) => {
     const token = localStorage.getItem('token');
@@ -49,14 +58,18 @@ export default function MyLeads() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        // Show the exact error from backend (e.g. "Invalid token" or "Missing field")
         const msg = errorData.detail || errorData.file_url?.[0] || "Failed to save lead";
         throw new Error(msg);
       }
 
       alert("Lead Saved Successfully!"); 
       setIsModalOpen(false);
-      fetchLeads();
+      
+      // Refresh the leads list
+      await fetchLeads();
+      
+      // Trigger dashboard refresh by dispatching custom event
+      window.dispatchEvent(new Event('leadAdded'));
 
     } catch (error) {
       console.error("Save failed:", error);
@@ -80,7 +93,10 @@ export default function MyLeads() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">My Leads</h1>
-        <button onClick={() => setIsModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex gap-2 hover:bg-indigo-700">
+        <button 
+          onClick={() => setIsModalOpen(true)} 
+          className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex gap-2 hover:bg-indigo-700 transition-colors"
+        >
           <Plus size={20} /> Add New Lead
         </button>
       </div>
@@ -88,35 +104,89 @@ export default function MyLeads() {
       <div className="bg-white p-4 rounded-xl shadow-sm border">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input type="text" placeholder="Search leads..." className="w-full pl-10 pr-4 py-2 border rounded-lg"
-            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <input 
+            type="text" 
+            placeholder="Search by name or phone..." 
+            className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            value={searchTerm} 
+            onChange={(e) => setSearchTerm(e.target.value)} 
+          />
         </div>
       </div>
 
-      {loading ? <div className="text-center py-10">Loading...</div> : 
-       filteredLeads.length === 0 ? <div className="text-center py-10 bg-white rounded-xl">No leads found.</div> : 
-       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {loading ? (
+        <div className="text-center py-10">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <p className="mt-2 text-gray-600">Loading leads...</p>
+        </div>
+      ) : filteredLeads.length === 0 ? (
+        <div className="text-center py-10 bg-white rounded-xl shadow-sm border">
+          <FileText size={48} className="mx-auto text-gray-300 mb-4" />
+          <p className="text-gray-600">
+            {searchTerm ? 'No leads match your search.' : 'No leads found. Add your first lead!'}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLeads.map((lead) => (
-            <div key={lead.id} className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-md">
-              <div className="flex justify-between mb-4">
-                <h3 className="font-bold text-gray-800">{lead.name}</h3>
-                <span className="text-indigo-600 font-bold">{lead.status?.toUpperCase()}</span>
+            <div 
+              key={lead.id} 
+              className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-md transition-shadow"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="font-bold text-gray-800 text-lg">{lead.name}</h3>
+                <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                  lead.status === 'new' ? 'bg-yellow-100 text-yellow-700' :
+                  lead.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
+                  lead.status === 'converted' ? 'bg-green-100 text-green-700' :
+                  'bg-gray-100 text-gray-700'
+                }`}>
+                  {lead.status?.toUpperCase()}
+                </span>
               </div>
+              
               <div className="space-y-2 text-sm text-gray-600">
-                <div className="flex items-center gap-2"><Phone size={16}/> {lead.phone_number}</div>
-                {lead.preferred_location && <div className="flex items-center gap-2"><MapPin size={16}/> {lead.preferred_location}</div>}
+                <div className="flex items-center gap-2">
+                  <Phone size={16} className="text-indigo-600" /> 
+                  <a href={`tel:${lead.phone_number}`} className="hover:text-indigo-600">
+                    {lead.phone_number}
+                  </a>
+                </div>
+                
+                {lead.preferred_location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin size={16} className="text-indigo-600" /> 
+                    {lead.preferred_location}
+                  </div>
+                )}
+                
+                {lead.budget && (
+                  <div className="flex items-center gap-2 text-gray-700 font-semibold">
+                    Budget: ₹{lead.budget}
+                  </div>
+                )}
+                
                 {lead.file_url && (
-                   <a href={lead.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-indigo-600 hover:underline mt-2 pt-2 border-t">
-                     <FileText size={14}/> View Document <ExternalLink size={12}/>
-                   </a>
+                  <a 
+                    href={lead.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="flex items-center gap-2 text-indigo-600 hover:underline mt-2 pt-2 border-t"
+                  >
+                    <FileText size={14}/> View Document <ExternalLink size={12}/>
+                  </a>
                 )}
               </div>
             </div>
           ))}
-       </div>
-      }
+        </div>
+      )}
 
-      <AddLeadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveLead} />
+      <AddLeadModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSave={handleSaveLead} 
+      />
     </div>
   );
 }
