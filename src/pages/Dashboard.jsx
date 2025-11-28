@@ -3,6 +3,7 @@ import { Users, Clock, CheckCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, new: 0, converted: 0 });
+  const [loading, setLoading] = useState(true);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com";
 
@@ -14,39 +15,61 @@ export default function Dashboard() {
     }
 
     try {
+      // CORRECT endpoint - no trailing ID
       const response = await fetch(`${API_URL}/api/leads/stats/`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+
+      if (response.status === 401) {
+        localStorage.clear();
+        window.location.href = '/';
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Stats data:', data); // Debug log
         setStats({
           total: data.total_leads || 0,
           new: data.new_leads || 0,
           converted: data.converted_leads || 0,
         });
+      } else {
+        console.error('Stats fetch failed:', response.status);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStats();
 
-    // Listen for lead additions from MyLeads page
+    // Listen for lead additions
     const handleLeadAdded = () => {
-      console.log('Lead added event received, refreshing stats...');
+      console.log('Lead added, refreshing stats...');
       fetchStats();
     };
 
     window.addEventListener('leadAdded', handleLeadAdded);
 
-    // Cleanup listener on unmount
     return () => {
       window.removeEventListener('leadAdded', handleLeadAdded);
     };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
