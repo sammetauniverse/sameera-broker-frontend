@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MapPin, Phone, Home, FileText, ExternalLink, Trash2 } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Home, FileText, ExternalLink, Trash2, User } from 'lucide-react';
 import AddLeadModal from '../components/AddLeadModal';
 
 export default function MyLeads() {
@@ -65,10 +65,7 @@ export default function MyLeads() {
       alert("Lead Saved Successfully!"); 
       setIsModalOpen(false);
       
-      // Refresh the leads list
       await fetchLeads();
-      
-      // Trigger dashboard refresh
       window.dispatchEvent(new Event('leadAdded'));
 
     } catch (error) {
@@ -97,7 +94,7 @@ export default function MyLeads() {
       if (response.ok) {
         alert("Lead deleted successfully!");
         await fetchLeads();
-        window.dispatchEvent(new Event('leadAdded')); // Refresh dashboard
+        window.dispatchEvent(new Event('leadAdded'));
       } else {
         throw new Error("Failed to delete lead");
       }
@@ -107,7 +104,6 @@ export default function MyLeads() {
     }
   };
 
-  // Filter Logic
   const filteredLeads = leads.filter(lead => 
     lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.phone_number?.includes(searchTerm)
@@ -166,21 +162,24 @@ export default function MyLeads() {
                 <Trash2 size={18} />
               </button>
 
-              {/* Lead Header */}
-              <div className="flex justify-between items-start mb-4 pr-8">
-                <h3 className="font-bold text-gray-800 text-lg">{lead.name}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
+              {/* Lead Header with Name and Status */}
+              <div className="mb-4 pr-8">
+                <div className="flex items-center gap-2 mb-2">
+                  <User size={20} className="text-indigo-600" />
+                  <h3 className="font-bold text-gray-900 text-lg">{lead.name || 'No Name'}</h3>
+                </div>
+                <span className={`text-xs px-3 py-1 rounded-full font-semibold inline-block ${
                   lead.status === 'new' ? 'bg-yellow-100 text-yellow-700' :
                   lead.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
                   lead.status === 'converted' ? 'bg-green-100 text-green-700' :
                   'bg-gray-100 text-gray-700'
                 }`}>
-                  {lead.status?.toUpperCase()}
+                  {lead.status?.toUpperCase() || 'NEW'}
                 </span>
               </div>
               
               {/* Lead Details */}
-              <div className="space-y-3 text-sm text-gray-600">
+              <div className="space-y-3 text-sm text-gray-700">
                 {/* Phone */}
                 <div className="flex items-center gap-2">
                   <Phone size={16} className="text-indigo-600 flex-shrink-0" /> 
@@ -193,7 +192,7 @@ export default function MyLeads() {
                 {lead.preferred_location && (
                   <div className="flex items-start gap-2">
                     <MapPin size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
-                    <span className="line-clamp-2">{lead.preferred_location}</span>
+                    <span>{lead.preferred_location}</span>
                   </div>
                 )}
 
@@ -201,14 +200,14 @@ export default function MyLeads() {
                 {lead.address && (
                   <div className="flex items-start gap-2">
                     <Home size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
-                    <span className="line-clamp-2">{lead.address}</span>
+                    <span className="line-clamp-3">{lead.address}</span>
                   </div>
                 )}
                 
                 {/* Budget */}
                 {lead.budget && (
-                  <div className="text-gray-800 font-bold bg-indigo-50 px-3 py-2 rounded-lg">
-                    Budget: ₹{parseFloat(lead.budget).toLocaleString('en-IN')}
+                  <div className="text-gray-900 font-bold bg-gradient-to-r from-indigo-50 to-purple-50 px-3 py-2 rounded-lg border border-indigo-100">
+                    💰 Budget: ₹{parseFloat(lead.budget).toLocaleString('en-IN')}
                   </div>
                 )}
                 
