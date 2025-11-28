@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, MapPin, Phone, Home, FileText, ExternalLink, Trash2, User } from 'lucide-react';
+import { Plus, Search, MapPin, Phone, Home, FileText, ExternalLink, Trash2, Calendar, Check, MapPinIcon, MessageSquare } from 'lucide-react';
 import AddLeadModal from '../components/AddLeadModal';
 
 export default function MyLeads() {
@@ -32,6 +32,7 @@ export default function MyLeads() {
         const data = await response.json();
         const results = Array.isArray(data) ? data : (data.results || []);
         setLeads(results);
+        console.log("Fetched leads:", results); // Debug
       }
     } catch (error) {
       console.error("Error fetching leads:", error);
@@ -106,8 +107,15 @@ export default function MyLeads() {
 
   const filteredLeads = leads.filter(lead => 
     lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone_number?.includes(searchTerm)
+    lead.phone_number?.includes(searchTerm) ||
+    lead.lead_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY
+  };
 
   return (
     <div className="space-y-6">
@@ -126,7 +134,7 @@ export default function MyLeads() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input 
             type="text" 
-            placeholder="Search by name or phone..." 
+            placeholder="Search by name, phone, or lead ID..." 
             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
@@ -147,41 +155,56 @@ export default function MyLeads() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {filteredLeads.map((lead) => (
             <div 
               key={lead.id} 
-              className="bg-white p-5 rounded-xl shadow-sm border hover:shadow-lg transition-shadow relative"
+              className="bg-white rounded-xl shadow-sm border hover:shadow-lg transition-all relative overflow-hidden"
             >
-              {/* Delete Button */}
-              <button
-                onClick={() => handleDeleteLead(lead.id, lead.name)}
-                className="absolute top-3 right-3 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                title="Delete Lead"
-              >
-                <Trash2 size={18} />
-              </button>
-
-              {/* Lead Header with Name and Status */}
-              <div className="mb-4 pr-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <User size={20} className="text-indigo-600" />
-                  <h3 className="font-bold text-gray-900 text-lg">{lead.name || 'No Name'}</h3>
+              {/* Header Section with Lead ID and Delete */}
+              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">Lead ID</p>
+                    <p className="font-bold text-indigo-700 text-lg">{lead.lead_id || 'N/A'}</p>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteLead(lead.id, lead.name)}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete Lead"
+                  >
+                    <Trash2 size={18} />
+                  </button>
                 </div>
-                <span className={`text-xs px-3 py-1 rounded-full font-semibold inline-block ${
-                  lead.status === 'new' ? 'bg-yellow-100 text-yellow-700' :
-                  lead.status === 'contacted' ? 'bg-blue-100 text-blue-700' :
-                  lead.status === 'converted' ? 'bg-green-100 text-green-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
-                  {lead.status?.toUpperCase() || 'NEW'}
-                </span>
+
+                {/* Client Name */}
+                <h3 className="font-bold text-gray-900 text-xl mt-3 mb-2">
+                  {lead.name || 'No Name Provided'}
+                </h3>
+
+                {/* Date and Budget Row */}
+                <div className="flex justify-between items-center text-sm">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Calendar size={14} />
+                    <span>{formatDate(lead.created_at)}</span>
+                  </div>
+                  {lead.budget && (
+                    <div className="flex items-center gap-1 text-indigo-700 font-semibold">
+                      <span>₹ {parseFloat(lead.budget).toLocaleString('en-IN')}</span>
+                    </div>
+                  )}
+                  {lead.acres && (
+                    <div className="text-gray-700">
+                      <span>Acres: {lead.acres}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              
-              {/* Lead Details */}
-              <div className="space-y-3 text-sm text-gray-700">
+
+              {/* Body Section */}
+              <div className="p-4 space-y-3">
                 {/* Phone */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-sm">
                   <Phone size={16} className="text-indigo-600 flex-shrink-0" /> 
                   <a href={`tel:${lead.phone_number}`} className="hover:text-indigo-600 font-medium">
                     {lead.phone_number}
@@ -190,7 +213,7 @@ export default function MyLeads() {
 
                 {/* Preferred Location */}
                 {lead.preferred_location && (
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2 text-sm">
                     <MapPin size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
                     <span>{lead.preferred_location}</span>
                   </div>
@@ -198,29 +221,50 @@ export default function MyLeads() {
 
                 {/* Address */}
                 {lead.address && (
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2 text-sm">
                     <Home size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" /> 
-                    <span className="line-clamp-3">{lead.address}</span>
+                    <span className="line-clamp-2 text-gray-600">{lead.address}</span>
                   </div>
                 )}
-                
-                {/* Budget */}
-                {lead.budget && (
-                  <div className="text-gray-900 font-bold bg-gradient-to-r from-indigo-50 to-purple-50 px-3 py-2 rounded-lg border border-indigo-100">
-                    💰 Budget: ₹{parseFloat(lead.budget).toLocaleString('en-IN')}
+
+                {/* Site Visit Status */}
+                {lead.site_visit_completed && (
+                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1.5 rounded">
+                    <Check size={16} />
+                    <span className="font-medium">Site Visit Completed</span>
                   </div>
                 )}
-                
-                {/* Document */}
+
+                {/* Comments */}
+                {lead.comments && (
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-start gap-2 text-sm">
+                      <MessageSquare size={16} className="text-indigo-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-gray-700 mb-1">Comments</p>
+                        <p className="text-gray-600 text-xs line-clamp-3">{lead.comments}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Attachments */}
                 {lead.file_url && (
-                  <a 
-                    href={lead.file_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-2 text-indigo-600 hover:underline mt-3 pt-3 border-t font-medium"
-                  >
-                    <FileText size={14}/> View Document <ExternalLink size={12}/>
-                  </a>
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs text-gray-600 mb-2">Attachments</p>
+                    <a 
+                      href={lead.file_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center justify-between bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText size={20} className="text-indigo-600" />
+                        <span className="text-sm font-medium text-gray-700">property_plan.pdf</span>
+                      </div>
+                      <ExternalLink size={14} className="text-gray-400" />
+                    </a>
+                  </div>
                 )}
               </div>
             </div>

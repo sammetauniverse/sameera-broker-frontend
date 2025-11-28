@@ -1,147 +1,244 @@
 import { useState } from 'react';
-import { X, Upload, Loader, FileText } from 'lucide-react';
-import { uploadFileToFirebase } from '../utils/uploadToFirebase';
+import { X, Upload, Loader } from 'lucide-react';
 
 export default function AddLeadModal({ isOpen, onClose, onSave }) {
-  if (!isOpen) return null;
-
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
-  
   const [formData, setFormData] = useState({
-    client_name: '',
+    name: '',
     phone_number: '',
     address: '',
     preferred_location: '',
     budget: '',
-    status: 'new',
-    file_url: ''
+    acres: '',
+    site_visit_completed: false,
+    comments: '',
+    file_url: '',
   });
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setUploading(true);
-    setUploadSuccess(false);
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('upload_preset', 'broker_docs'); // Configure in Cloudinary
 
     try {
-      const url = await uploadFileToFirebase(file);
-      if (url) {
-        setFormData(prev => ({ ...prev, file_url: url }));
-        setUploadSuccess(true);
-      }
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/YOUR_CLOUD_NAME/upload',
+        {
+          method: 'POST',
+          body: uploadFormData
+        }
+      );
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, file_url: data.secure_url }));
     } catch (error) {
-      console.error("Upload Error:", error);
-      alert("File upload failed. Please try again.");
+      console.error('Upload error:', error);
+      alert('File upload failed');
     } finally {
       setUploading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // ✅ EXPLICITLY BUILD PAYLOAD WITH ALL REQUIRED FIELDS
-      const payload = {
-        client_name: formData.client_name,
-        phone_number: formData.phone_number,
-        address: formData.address || '',
-        preferred_location: formData.preferred_location || '',
-        budget: formData.budget === '' ? null : formData.budget,
-        status: 'new',  // ✅ Always set status to 'new'
-        file_url: formData.file_url || null
-      };
-
-      await onSave(payload);
-    } catch (error) {
-      console.error("Save error:", error);
-    } finally {
-      setLoading(false);
+  const handleSubmit = () => {
+    if (!formData.name || !formData.phone_number) {
+      alert('Name and Phone are required!');
+      return;
     }
+    onSave(formData);
+    setFormData({
+      name: '',
+      phone_number: '',
+      address: '',
+      preferred_location: '',
+      budget: '',
+      acres: '',
+      site_visit_completed: false,
+      comments: '',
+      file_url: '',
+    });
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b sticky top-0 bg-white z-10">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-800">Add New Lead</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors">
-            <X size={24} />
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <X size={20} />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6 space-y-4">
+          {/* Name and Phone */}
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
-              <input required name="client_name" value={formData.client_name} onChange={handleChange}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="John Doe" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Client Name *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="John Doe"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-              <input required name="phone_number" value={formData.phone_number} onChange={handleChange}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="1234567890" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number *
+              </label>
+              <input
+                type="tel"
+                name="phone_number"
+                value={formData.phone_number}
+                onChange={handleChange}
+                placeholder="1234567890"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                required
+              />
             </div>
           </div>
 
+          {/* Address */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
-            <textarea name="address" value={formData.address} onChange={handleChange} rows="2"
-              className="w-full p-3 border rounded-lg" placeholder="Enter full address" />
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
+            <textarea
+              name="address"
+              value={formData.address}
+              onChange={handleChange}
+              placeholder="Enter full address"
+              rows={2}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Location, Budget, Acres */}
+          <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Location</label>
-              <input name="preferred_location" value={formData.preferred_location} onChange={handleChange}
-                className="w-full p-3 border rounded-lg" placeholder="e.g. Chennai" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Preferred Location
+              </label>
+              <input
+                type="text"
+                name="preferred_location"
+                value={formData.preferred_location}
+                onChange={handleChange}
+                placeholder="e.g. Chennai"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Budget</label>
-              <input name="budget" type="number" value={formData.budget} onChange={handleChange}
-                className="w-full p-3 border rounded-lg" placeholder="e.g. 5000000" />
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Budget</label>
+              <input
+                type="number"
+                name="budget"
+                value={formData.budget}
+                onChange={handleChange}
+                placeholder="5000000"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Acres</label>
+              <input
+                type="number"
+                step="0.01"
+                name="acres"
+                value={formData.acres}
+                onChange={handleChange}
+                placeholder="5.2"
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
             </div>
           </div>
 
-          {/* Upload Box */}
-          <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors ${uploadSuccess ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50'}`}>
-            <input type="file" onChange={handleFileChange} className="hidden" id="modal-upload" disabled={uploading} />
-            <label htmlFor="modal-upload" className={`cursor-pointer flex flex-col items-center ${uploading ? 'opacity-50' : ''}`}>
-              {uploading ? (
-                <Loader className="animate-spin text-indigo-600 w-8 h-8 mb-2"/>
-              ) : uploadSuccess ? (
-                <FileText className="text-green-600 w-8 h-8 mb-2"/>
-              ) : (
-                <Upload className="text-gray-400 w-8 h-8 mb-2"/>
-              )}
-              
-              <span className="text-sm font-medium text-gray-700">
-                {uploading ? "Uploading Document..." : uploadSuccess ? "Document Attached!" : "Click to Upload Document (PDF/Image)"}
-              </span>
+          {/* Comments */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Comments / Notes</label>
+            <textarea
+              name="comments"
+              value={formData.comments}
+              onChange={handleChange}
+              placeholder="Add any notes or comments about this lead..."
+              rows={3}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Site Visit Checkbox */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="site_visit"
+              name="site_visit_completed"
+              checked={formData.site_visit_completed}
+              onChange={handleChange}
+              className="w-4 h-4 text-indigo-600"
+            />
+            <label htmlFor="site_visit" className="text-sm text-gray-700">
+              Site Visit Completed
             </label>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-lg hover:bg-gray-50 transition-colors">
-              Cancel
-            </button>
-            <button type="submit" disabled={loading || uploading} 
-              className="flex-1 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 disabled:bg-gray-400 transition-colors">
-              {loading ? "Saving..." : "Save Lead"}
-            </button>
+          {/* File Upload */}
+          <div className="border-2 border-dashed rounded-lg p-6 text-center">
+            <Upload className="mx-auto text-gray-400 mb-2" size={32} />
+            <p className="text-sm text-gray-600 mb-2">
+              {uploading ? 'Uploading...' : 'Click to Upload Document (PDF/Image)'}
+            </p>
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="file-upload"
+              disabled={uploading}
+            />
+            <label
+              htmlFor="file-upload"
+              className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-100"
+            >
+              {uploading ? <Loader className="animate-spin" size={16} /> : 'Choose File'}
+            </label>
+            {formData.file_url && (
+              <p className="text-xs text-green-600 mt-2">✓ File uploaded successfully</p>
+            )}
           </div>
-        </form>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 border rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Save Lead
+          </button>
+        </div>
       </div>
     </div>
   );
