@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { X, Upload, Loader } from 'lucide-react';
 
 export default function AddLeadModal({ isOpen, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -13,6 +13,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     comments: '',
     file_url: '',
   });
+  const [uploading, setUploading] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -22,35 +23,36 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     }));
   };
 
-  // Cloudinary Upload Widget
-  const openCloudinaryWidget = () => {
-    // Create widget instance
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: 'dt38qbrni', // Your cloud name from previous uploads
-        uploadPreset: 'broker_docs', // Create this in Cloudinary dashboard
-        sources: ['local', 'camera'],
-        multiple: false,
-        maxFileSize: 10000000, // 10MB
-        resourceType: 'auto',
-        clientAllowedFormats: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
-        folder: 'broker_leads', // Organize uploads
-      },
-      (error, result) => {
-        if (error) {
-          console.error('Upload error:', error);
-          alert('File upload failed. Please try again.');
-          return;
-        }
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-        if (result.event === 'success') {
-          console.log('Upload success:', result.info);
-          setFormData(prev => ({ ...prev, file_url: result.info.secure_url }));
-        }
-      }
-    );
+    setUploading(true);
+    const uploadData = new FormData();
+    uploadData.append('file', file);
+    uploadData.append('upload_preset', 'ml_default'); // Use default unsigned preset
+    uploadData.append('cloud_name', 'dt38qbrni');
 
-    widget.open();
+    try {
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/dt38qbrni/upload',
+        {
+          method: 'POST',
+          body: uploadData
+        }
+      );
+      
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const data = await response.json();
+      setFormData(prev => ({ ...prev, file_url: data.secure_url }));
+      alert('File uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('File upload failed. You can add the lead without a file.');
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -59,7 +61,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
       return;
     }
     
-    console.log("Submitting lead data:", formData); // Debug
+    console.log("Submitting:", formData);
     onSave(formData);
     
     // Reset form
@@ -92,9 +94,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
           {/* Name and Phone */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Client Name *
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Client Name *</label>
               <input
                 type="text"
                 name="name"
@@ -105,11 +105,8 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
                 required
               />
             </div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Phone Number *
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
               <input
                 type="tel"
                 name="phone_number"
@@ -138,19 +135,16 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
           {/* Location, Budget, Acres */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Preferred Location
-              </label>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Preferred Location</label>
               <input
                 type="text"
                 name="preferred_location"
                 value={formData.preferred_location}
                 onChange={handleChange}
-                placeholder="e.g. Chennai"
+                placeholder="Chennai"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Budget</label>
               <input
@@ -158,11 +152,10 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
                 name="budget"
                 value={formData.budget}
                 onChange={handleChange}
-                placeholder="5000000"
+                placeholder="1200000"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
-
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Acres</label>
               <input
@@ -171,7 +164,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
                 name="acres"
                 value={formData.acres}
                 onChange={handleChange}
-                placeholder="5.2"
+                placeholder="21"
                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
@@ -184,13 +177,13 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
               name="comments"
               value={formData.comments}
               onChange={handleChange}
-              placeholder="Add any notes or comments about this lead..."
+              placeholder="Add notes..."
               rows={3}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Site Visit Checkbox */}
+          {/* Site Visit */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -200,36 +193,31 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
               onChange={handleChange}
               className="w-4 h-4 text-indigo-600"
             />
-            <label htmlFor="site_visit" className="text-sm text-gray-700">
-              Site Visit Completed
-            </label>
+            <label htmlFor="site_visit" className="text-sm text-gray-700">Site Visit Completed</label>
           </div>
 
-          {/* File Upload using Cloudinary Widget */}
+          {/* File Upload */}
           <div className="border-2 border-dashed rounded-lg p-6 text-center">
             <Upload className="mx-auto text-gray-400 mb-2" size={32} />
             <p className="text-sm text-gray-600 mb-3">
-              Click to Upload Document (PDF/Image)
+              {uploading ? 'Uploading...' : 'Upload Document (Optional)'}
             </p>
-            <button
-              type="button"
-              onClick={openCloudinaryWidget}
-              className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors"
+            <input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="file-upload"
+              disabled={uploading}
+            />
+            <label
+              htmlFor="file-upload"
+              className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-100"
             >
-              Choose File
-            </button>
+              {uploading ? <Loader className="animate-spin inline" size={16} /> : 'Choose File'}
+            </label>
             {formData.file_url && (
-              <div className="mt-3">
-                <p className="text-xs text-green-600">✓ File uploaded successfully</p>
-                <a 
-                  href={formData.file_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
-                >
-                  View uploaded file
-                </a>
-              </div>
+              <p className="text-xs text-green-600 mt-2">✓ File uploaded</p>
             )}
           </div>
         </div>
