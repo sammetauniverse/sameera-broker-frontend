@@ -6,24 +6,24 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, new: 0, converted: 0 });
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await api.get('/leads/'); // or '/leads/summary/' if you add that endpoint
-        const data = res.data;
-        const leads = Array.isArray(data) ? data : (data.results || []);
+  const fetchStats = async () => {
+    try {
+      // Use the /stats/ endpoint instead of /leads/
+      const res = await api.get('/leads/stats/');
+      
+      // Backend returns: {total_leads, new_leads, converted_leads}
+      setStats({
+        total: res.data.total_leads || 0,
+        new: res.data.new_leads || 0,
+        converted: res.data.converted_leads || 0,
+      });
+    } catch (e) {
+      console.error('Error fetching stats:', e);
+    }
+  };
+  fetchStats();
+}, []);
 
-        setStats({
-          total: leads.length,
-          new: leads.filter((l) => l.status === 'new').length,
-          converted: leads.filter((l) => l.is_converted).length,
-        });
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    fetchStats();
-  }, []);
 
   return (
     <div className="space-y-6">
