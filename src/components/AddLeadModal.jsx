@@ -30,8 +30,7 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
     setUploading(true);
     const uploadData = new FormData();
     uploadData.append('file', file);
-    uploadData.append('upload_preset', 'ml_default'); // Use default unsigned preset
-    uploadData.append('cloud_name', 'dt38qbrni');
+    uploadData.append('upload_preset', 'ml_default');
 
     try {
       const response = await fetch(
@@ -46,10 +45,10 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
       
       const data = await response.json();
       setFormData(prev => ({ ...prev, file_url: data.secure_url }));
-      alert('File uploaded successfully!');
+      alert('File uploaded!');
     } catch (error) {
       console.error('Upload error:', error);
-      alert('File upload failed. You can add the lead without a file.');
+      alert('Upload failed. Continue without file.');
     } finally {
       setUploading(false);
     }
@@ -61,10 +60,8 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
       return;
     }
     
-    console.log("Submitting:", formData);
     onSave(formData);
     
-    // Reset form
     setFormData({
       name: '',
       phone_number: '',
@@ -91,7 +88,6 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
         </div>
 
         <div className="p-6 space-y-4">
-          {/* Name and Phone */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Client Name *</label>
@@ -119,20 +115,18 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Address */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Address</label>
             <textarea
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="Enter full address"
+              placeholder="Full address"
               rows={2}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Location, Budget, Acres */}
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Preferred Location</label>
@@ -170,20 +164,18 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
             </div>
           </div>
 
-          {/* Comments */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Comments / Notes</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Comments</label>
             <textarea
               name="comments"
               value={formData.comments}
               onChange={handleChange}
-              placeholder="Add notes..."
+              placeholder="Notes..."
               rows={3}
               className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
 
-          {/* Site Visit */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -191,17 +183,13 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
               name="site_visit_completed"
               checked={formData.site_visit_completed}
               onChange={handleChange}
-              className="w-4 h-4 text-indigo-600"
+              className="w-4 h-4"
             />
-            <label htmlFor="site_visit" className="text-sm text-gray-700">Site Visit Completed</label>
+            <label htmlFor="site_visit" className="text-sm">Site Visit Completed</label>
           </div>
 
-          {/* File Upload */}
           <div className="border-2 border-dashed rounded-lg p-6 text-center">
             <Upload className="mx-auto text-gray-400 mb-2" size={32} />
-            <p className="text-sm text-gray-600 mb-3">
-              {uploading ? 'Uploading...' : 'Upload Document (Optional)'}
-            </p>
             <input
               type="file"
               accept=".pdf,.jpg,.jpeg,.png"
@@ -210,30 +198,18 @@ export default function AddLeadModal({ isOpen, onClose, onSave }) {
               id="file-upload"
               disabled={uploading}
             />
-            <label
-              htmlFor="file-upload"
-              className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg cursor-pointer hover:bg-indigo-100"
-            >
+            <label htmlFor="file-upload" className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg cursor-pointer">
               {uploading ? <Loader className="animate-spin inline" size={16} /> : 'Choose File'}
             </label>
-            {formData.file_url && (
-              <p className="text-xs text-green-600 mt-2">✓ File uploaded</p>
-            )}
+            {formData.file_url && <p className="text-xs text-green-600 mt-2">✓ Uploaded</p>}
           </div>
         </div>
 
-        {/* Footer */}
         <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex justify-end gap-3 border-t">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 border rounded-lg hover:bg-gray-100 transition-colors"
-          >
+          <button onClick={onClose} className="px-6 py-2 border rounded-lg hover:bg-gray-100">
             Cancel
           </button>
-          <button
-            onClick={handleSubmit}
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
+          <button onClick={handleSubmit} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
             Save Lead
           </button>
         </div>
