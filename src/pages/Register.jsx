@@ -1,71 +1,124 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Loader } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
 
 export default function Register() {
-  const [formData, setFormData] = useState({ username: '', email: '', password: '' });
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: ''
+  });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Ensure this matches your Vercel Env Var or fallback correctly
-  const API_URL = import.meta.env.VITE_API_URL || "https://sameera-broker-backend.onrender.com";
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
     try {
-      console.log("Registering to:", `${API_URL}/api/users/register/`);
-      
-      const response = await fetch(`${API_URL}/api/users/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const response = await axios.post(
+        'https://sameera-broker-backend.onrender.com/api/auth/register/',
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      const data = await response.json();
+      // Store tokens in localStorage
+      localStorage.setItem('accessToken', response.data.access);
+      localStorage.setItem('refreshToken', response.data.refresh);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
 
-      if (!response.ok) {
-        // Extract specific error message from Django
-        const msg = data.username ? `Username: ${data.username[0]}` : 
-                    data.email ? `Email: ${data.email[0]}` : 
-                    data.detail || "Registration failed";
-        throw new Error(msg);
-      }
-
-      alert("Account Created! Please Login.");
-      navigate('/');
-
+      // Redirect to dashboard
+      navigate('/dashboard');
     } catch (err) {
-      console.error("Registration Error:", err);
-      setError(err.message);
+      console.error('Registration error:', err);
+      setError(
+        err.response?.data?.error || 
+        'Registration failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-indigo-600 p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">Register</h1>
-        {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-center text-sm">{error}</div>}
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+        <h2 className="text-3xl font-bold text-center mb-6">Register</h2>
         
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" placeholder="Username" required className="w-full p-3 border rounded-xl"
-            onChange={(e) => setFormData({...formData, username: e.target.value})} />
-          <input type="email" placeholder="Email" required className="w-full p-3 border rounded-xl"
-            onChange={(e) => setFormData({...formData, email: e.target.value})} />
-          <input type="password" placeholder="Password" required className="w-full p-3 border rounded-xl"
-            onChange={(e) => setFormData({...formData, password: e.target.value})} />
-          <button type="submit" disabled={loading} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold">
-            {loading ? <Loader className="animate-spin mx-auto" /> : "Register"}
+          <div>
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+            />
+          </div>
+
+          <div>
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
+          >
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        <div className="mt-6 text-center">
-          <Link to="/" className="text-indigo-600 font-bold hover:underline">Login here</Link>
-        </div>
+
+        <p className="text-center mt-6">
+          <Link to="/login" className="text-purple-600 hover:underline">
+            Login here
+          </Link>
+        </p>
       </div>
     </div>
   );
