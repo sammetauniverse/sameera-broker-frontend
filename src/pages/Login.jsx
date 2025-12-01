@@ -9,48 +9,50 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault(); 
-    
-    console.log("Login process started...");
+    e.preventDefault();
     setLoading(true);
     setError('');
+    console.log("Login initiated...");
+
+    // Create a timeout controller to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
     try {
-      console.log("Sending request to backend...");
-      
       const response = await fetch('https://sameera-broker-backend.onrender.com/api/auth/login/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ username, password }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
+      console.log("Response status:", response.status);
 
-      console.log("Response received:", response.status);
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (jsonError) {
-        console.error("Failed to parse JSON:", jsonError);
-        throw new Error("Server returned an invalid response (likely 500 or 404).");
-      }
+      const data = await response.json();
 
       if (response.ok) {
-        console.log("Login successful, saving tokens...");
+        console.log("Success! Saving tokens...");
         localStorage.setItem('accessToken', data.access);
         localStorage.setItem('refreshToken', data.refresh);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        console.log("Navigating to dashboard...");
-        setTimeout(() => {
-           navigate('/dashboard');
-        }, 100);
+        // Force redirect
+        window.location.href = '/dashboard';
       } else {
-        console.warn("Login failed:", data);
-        setError(data.detail || 'Invalid credentials');
+        console.error("Login Failed:", data);
+        setError(data.detail || 'Login failed. Please check username/password.');
       }
     } catch (err) {
-      console.error('Critical Error:', err);
-      setError('Connection failed. Backend might be sleeping (wait 30s) or URL is wrong.');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Server is waking up, please try again in 30s.');
+      } else {
+        console.error("Network Error:", err);
+        setError('Cannot connect to server. Check your internet or try again later.');
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ export default function Login() {
         <h1 className="text-3xl font-bold text-center mb-6">Sign In</h1>
 
         {error && (
-          <div className="bg-red-100 text-red-700 px-4 py-3 rounded mb-4 border border-red-200">
+          <div className="bg-red-100 text-red-700 px-4 py-3 rounded mb-4 border border-red-200 text-sm">
             {error}
           </div>
         )}
@@ -75,7 +77,7 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Enter your username"
+              placeholder="Enter username"
               required 
             />
           </div>
@@ -87,7 +89,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-              placeholder="Enter your password"
+              placeholder="Enter password"
               required 
             />
           </div>
@@ -95,9 +97,9 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Connecting...' : 'Sign In'}
           </button>
         </form>
 
