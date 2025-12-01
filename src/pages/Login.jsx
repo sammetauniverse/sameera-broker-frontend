@@ -14,9 +14,9 @@ export default function Login() {
     setError('');
     console.log("Login initiated...");
 
-    // Create a timeout controller to prevent hanging
+    // Increased timeout to 90 seconds for sleeping Render server
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 90000); 
 
     try {
       const response = await fetch('https://sameera-broker-backend.onrender.com/api/auth/login/', {
@@ -48,10 +48,10 @@ export default function Login() {
       }
     } catch (err) {
       if (err.name === 'AbortError') {
-        setError('Request timed out. Server is waking up, please try again in 30s.');
+        setError('Server is waking up (it sleeps after 15m). Please wait 1 minute and try again.');
       } else {
         console.error("Network Error:", err);
-        setError('Cannot connect to server. Check your internet or try again later.');
+        setError('Connection failed. Backend may be down or blocked. Check console for details.');
       }
     } finally {
       setLoading(false);
@@ -99,7 +99,7 @@ export default function Login() {
             disabled={loading}
             className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition disabled:opacity-50"
           >
-            {loading ? 'Connecting...' : 'Sign In'}
+            {loading ? 'Waking up server...' : 'Sign In'}
           </button>
         </form>
 
