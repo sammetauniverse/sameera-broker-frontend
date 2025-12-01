@@ -1,17 +1,29 @@
-import useGoogleDrive from './hooks/useGoogleDrive';
-import GoogleAuthButtons from './components/GoogleAuthButtons';
-import FileUploader from './components/FileUploader';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import MyLeads from './pages/MyLeads';
+import PrivateRoute from './components/PrivateRoute';
 
-function App() {
-  useGoogleDrive(); // Initialize Google Drive on mount
-
+export default function App() {
   return (
-    <div>
-      <h1>Google Drive File Uploader Demo</h1>
-      <GoogleAuthButtons />
-      <FileUploader />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        
+        <Route path="/dashboard" element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        } />
+        
+        <Route path="/leads" element={
+          <PrivateRoute>
+            <MyLeads />
+          </PrivateRoute>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
-export default App;

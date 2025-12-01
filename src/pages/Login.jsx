@@ -1,98 +1,73 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
 
 export default function Login() {
-  const [formData, setFormData] = useState({
-    username: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
 
     try {
-      const response = await axios.post(
-        'https://sameera-broker-backend.onrender.com/api/auth/login/',
-        {
-          username: formData.username,
-          password: formData.password
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await fetch('https://sameera-broker-backend.onrender.com/api/auth/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
 
-      // Store tokens in localStorage
-      localStorage.setItem('accessToken', response.data.access);
-      localStorage.setItem('refreshToken', response.data.refresh);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
+      const data = await response.json();
 
-      // Redirect to dashboard
-      navigate('/dashboard');
+      if (response.ok) {
+        localStorage.setItem('accessToken', data.access);
+        localStorage.setItem('refreshToken', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Navigate after state update completes
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 100);
+      } else {
+        setError(data.detail || 'Invalid credentials');
+        setLoading(false);
+      }
     } catch (err) {
       console.error('Login error:', err);
-      setError(
-        err.response?.data?.error || 
-        'Invalid username or password'
-      );
-    } finally {
+      setError('Connection error. Please try again.');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center mb-6">Sign In</h2>
-        
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
-          </div>
-        )}
+        <h1 className="text-3xl font-bold text-center mb-6">Sign In</h1>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {error && <div className="bg-red-100 text-red-700 px-4 py-3 rounded mb-4">{error}</div>}
+
+        <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Username
-            </label>
+            <label className="block text-sm font-medium mb-2">Username</label>
             <input
               type="text"
-              name="username"
-              placeholder="Username"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full px-4 py-3 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Password
-            </label>
+            <label className="block text-sm font-medium mb-2">Password</label>
             <input
               type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 bg-blue-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
               required
             />
           </div>
@@ -106,10 +81,8 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center mt-6">
-          <Link to="/register" className="text-purple-600 hover:underline">
-            Register here
-          </Link>
+        <p className="text-center mt-4 text-purple-600">
+          <Link to="/register">Register here</Link>
         </p>
       </div>
     </div>
