@@ -8,18 +8,23 @@ export default function Login() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  // Hardcoded URL for absolute certainty
+  const LOGIN_URL = 'https://sameera-broker-backend.onrender.com/api/token/';
+
+  const handleLogin = async () => {
+    console.log("1. Button clicked. Starting login process...");
     setLoading(true);
     setError('');
 
-    // Hardcoded URL to ensure it hits the correct endpoint
-    const LOGIN_URL = 'https://sameera-broker-backend.onrender.com/api/token/'; 
+    if (!username || !password) {
+      setError("Please enter both username and password.");
+      setLoading(false);
+      return;
+    }
 
     try {
-      console.log("Attempting login to:", LOGIN_URL);
-      console.log("Payload:", { username, password });
-
+      console.log("2. Preparing to fetch from:", LOGIN_URL);
+      
       const response = await fetch(LOGIN_URL, {
         method: 'POST',
         headers: {
@@ -27,27 +32,27 @@ export default function Login() {
         },
         body: JSON.stringify({ username, password }),
       });
-      
-      console.log("Response Status:", response.status);
+
+      console.log("3. Fetch complete. Status:", response.status);
+
       const data = await response.json();
-      console.log("Response Data:", data);
+      console.log("4. Response data:", data);
 
       if (response.ok) {
-        // Store tokens
+        console.log("5. Login successful. Saving tokens...");
         localStorage.setItem('accessToken', data.access);
         localStorage.setItem('refreshToken', data.refresh);
-        console.log("Tokens stored, redirecting...");
         
-        // Force redirect to dashboard to clear any stale state
+        console.log("6. Redirecting to dashboard...");
+        // Using window.location for a hard redirect to ensure clean state
         window.location.href = '/dashboard';
       } else {
-        // Handle specific error messages from Django
-        const errorMessage = data.detail || 'Invalid username or password';
-        setError(errorMessage);
+        console.error("Login failed with status:", response.status);
+        setError(data.detail || 'Invalid credentials. Please try again.');
       }
     } catch (err) {
-      console.error("Network/Fetch Error:", err);
-      setError('Network error. Please check your internet connection or try again later.');
+      console.error("CRITICAL NETWORK ERROR:", err);
+      setError('Network error: Could not connect to server. Please check your internet.');
     } finally {
       setLoading(false);
     }
@@ -55,55 +60,49 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-96">
+      {/* Changed from <form> to <div> to prevent accidental submits */}
+      <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl mb-6 font-bold text-center text-gray-800">Broker Portal Login</h2>
         
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span className="block sm:inline">{error}</span>
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
           </div>
         )}
         
         <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
-            Username
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">Username</label>
           <input 
-            id="username"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             type="text" 
             placeholder="Enter your username" 
             value={username} 
             onChange={e => setUsername(e.target.value)} 
-            required
           />
         </div>
         
         <div className="mb-6">
-          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-            Password
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
           <input 
-            id="password"
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             type="password" 
-            placeholder="******************" 
+            placeholder="Enter your password" 
             value={password} 
             onChange={e => setPassword(e.target.value)} 
-            required
+            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }} // Allow Enter key to submit
           />
         </div>
         
         <button 
+          onClick={handleLogin} // Direct click handler
           disabled={loading}
           className={`w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-white ${
             loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
           }`}
-          type="submit"
         >
-          {loading ? 'Logging in...' : 'Sign In'}
+          {loading ? 'Connecting...' : 'Sign In'}
         </button>
-      </form>
+      </div>
     </div>
   );
 }
