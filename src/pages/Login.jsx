@@ -44,7 +44,6 @@ export default function Login() {
         localStorage.setItem('refreshToken', data.refresh);
         
         console.log("6. Redirecting to dashboard...");
-        // Using window.location for a hard redirect to ensure clean state
         window.location.href = '/dashboard';
       } else {
         console.error("Login failed with status:", response.status);
@@ -60,7 +59,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      {/* Changed from <form> to <div> to prevent accidental submits */}
+      {/* CRITICAL: Using div instead of form to prevent default submit behavior */}
       <div className="bg-white p-8 rounded shadow-md w-96">
         <h2 className="text-2xl mb-6 font-bold text-center text-gray-800">Broker Portal Login</h2>
         
@@ -89,12 +88,12 @@ export default function Login() {
             placeholder="Enter your password" 
             value={password} 
             onChange={e => setPassword(e.target.value)} 
-            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }} // Allow Enter key to submit
+            onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }}
           />
         </div>
         
         <button 
-          onClick={handleLogin} // Direct click handler
+          onClick={handleLogin}
           disabled={loading}
           className={`w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-white ${
             loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
