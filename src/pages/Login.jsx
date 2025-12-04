@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -13,13 +13,13 @@ export default function Login() {
     setLoading(true);
     setError('');
 
-    // Use the standard simple JWT token endpoint
-    // If your backend uses 'api/token/', change it here.
-    // Based on your admin url working, the domain is correct.
+    // Hardcoded URL to ensure it hits the correct endpoint
     const LOGIN_URL = 'https://sameera-broker-backend.onrender.com/api/token/'; 
 
     try {
-      console.log("Sending request to:", LOGIN_URL);
+      console.log("Attempting login to:", LOGIN_URL);
+      console.log("Payload:", { username, password });
+
       const response = await fetch(LOGIN_URL, {
         method: 'POST',
         headers: {
@@ -28,22 +28,26 @@ export default function Login() {
         body: JSON.stringify({ username, password }),
       });
       
-      console.log("Response status:", response.status);
+      console.log("Response Status:", response.status);
       const data = await response.json();
+      console.log("Response Data:", data);
 
       if (response.ok) {
-        console.log("Login Success", data);
+        // Store tokens
         localStorage.setItem('accessToken', data.access);
         localStorage.setItem('refreshToken', data.refresh);
-        // Redirect manually to avoid router loops
+        console.log("Tokens stored, redirecting...");
+        
+        // Force redirect to dashboard to clear any stale state
         window.location.href = '/dashboard';
       } else {
-        console.error("Login Failed:", data);
-        setError('Login failed. Check username/password.');
+        // Handle specific error messages from Django
+        const errorMessage = data.detail || 'Invalid username or password';
+        setError(errorMessage);
       }
     } catch (err) {
-      console.error("Network Error:", err);
-      setError('Network error. Backend may be down or blocking connection.');
+      console.error("Network/Fetch Error:", err);
+      setError('Network error. Please check your internet connection or try again later.');
     } finally {
       setLoading(false);
     }
@@ -51,30 +55,53 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-80">
-        <h2 className="text-2xl mb-4 font-bold text-center">Login</h2>
-        {error && <div className="text-red-500 text-sm mb-3">{error}</div>}
+      <form onSubmit={handleLogin} className="bg-white p-8 rounded shadow-md w-96">
+        <h2 className="text-2xl mb-6 font-bold text-center text-gray-800">Broker Portal Login</h2>
         
-        <input 
-          className="w-full border p-2 mb-3 rounded"
-          type="text" 
-          placeholder="Username" 
-          value={username} 
-          onChange={e => setUsername(e.target.value)} 
-        />
-        <input 
-          className="w-full border p-2 mb-3 rounded"
-          type="password" 
-          placeholder="Password" 
-          value={password} 
-          onChange={e => setPassword(e.target.value)} 
-        />
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
+        
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="username">
+            Username
+          </label>
+          <input 
+            id="username"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            type="text" 
+            placeholder="Enter your username" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)} 
+            required
+          />
+        </div>
+        
+        <div className="mb-6">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
+            Password
+          </label>
+          <input 
+            id="password"
+            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            type="password" 
+            placeholder="******************" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            required
+          />
+        </div>
         
         <button 
           disabled={loading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          className={`w-full font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline text-white ${
+            loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+          type="submit"
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Logging in...' : 'Sign In'}
         </button>
       </form>
     </div>
